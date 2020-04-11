@@ -51,6 +51,18 @@ defmodule Apa do
       iex> Apa.add("1", "2")
       "3"
 
+      iex> ApaAdd.bc_add("999989", "222222")
+      "1222211"
+
+      iex> ApaAdd.bc_add("222222", "999989")
+      "1222211"
+
+      iex> ApaAdd.bc_add("999", "999989")
+      "1000988"
+
+      iex> ApaAdd.bc_add("000000999", "0999989")
+      "1000988"
+
   """
   def add(left, right) do
     ApaAdd.bc_add(left, right)
