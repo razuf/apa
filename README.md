@@ -10,10 +10,13 @@ https://hex.pm/packages/apa
 
 An incomplete list of supported and planned features
 
- - [ ] basic operations (`add`, `sub`, `mul`, `div` )
- - [ ] exponentiation (`comp`)
- - [ ] exponentiation (`mod`)
- - [ ] exponentiation (`pow`)
+  - [ ] basic operations (`add`)
+  - [ ] basic operations (`sub`)
+  - [ ] basic operations (`mul`)
+  - [ ] basic operations (`div`)
+  - [ ] exponentiation (`comp`)
+  - [ ] exponentiation (`mod`)
+  - [ ] exponentiation (`pow`)
 
 ## Installation
 

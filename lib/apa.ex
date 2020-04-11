@@ -2,9 +2,41 @@ defmodule Apa do
   @moduledoc """
   Documentation for `Apa`.
 
-  I want to make it easier to access all functions from one Module - this Apa module,
-  but I want to write the code in different files - like ApaAdd, ApaSub etc.
-  Maybe there is a better idea and I find them later - any tip is welcome.
+  To make it easier to access all functions from one Module
+  and to write the code in different files - like ApaAdd, ApaSub etc.
+  Maybe there is a better idea - any tip is welcome.
+
+  APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
+
+  For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals(limit need to be checked - see below TO CHECK:), represented as strings. Inspired by BCMath/PHP.
+
+  ## Features
+
+  An incomplete list of supported and planned features
+
+  - [ ] basic operations (`add`)
+  - [ ] basic operations (`sub`)
+  - [ ] basic operations (`mul`)
+  - [ ] basic operations (`div`)
+  - [ ] exponentiation (`comp`)
+  - [ ] exponentiation (`mod`)
+  - [ ] exponentiation (`pow`)
+
+  ## Installation
+
+    1. Add `apa` to your list of dependencies in `mix.exs`:
+
+
+  def deps do
+    [
+      {:apa, "~> 0.1.0"}
+    ]
+  end
+
+
+  ## Usage
+
+  Apa.add("123", "456")
 
   """
 
@@ -12,7 +44,7 @@ defmodule Apa do
   alias ApaSub
 
   @doc """
-  Addition
+  APA : Arbitrary Precision Arithmetic - Addition
 
   ## Examples
 
@@ -25,7 +57,7 @@ defmodule Apa do
   end
 
   @doc """
-  Subtraction
+  APA : Arbitrary Precision Arithmetic - Subtraction
 
   ## Examples
 

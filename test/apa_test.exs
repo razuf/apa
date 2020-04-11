@@ -1,6 +1,7 @@
 defmodule ApaTest do
   use ExUnit.Case
   doctest Apa
+  doctest ApaNumber
 
   @moduledoc """
   Documentation for `ApaTest`.
