@@ -2,39 +2,79 @@ defmodule ApaAdd do
   @moduledoc """
   APA : Arbitrary Precision Arithmetic - Addition - ApaAdd.
   """
-  import ApaNumber
 
   @doc """
   Addition - internal function - please call Apa.add(left, right)
   In reference to bcmath I call this functions bc_add
   """
 
-  # first naiv impl only wiht integers
-  def bc_add(left, right) when is_binary(left) and is_binary(right) do
-    left = clean(left)
-    right = clean(right)
+  @spec bc_add(String.t(), String.t(), integer) :: String.t()
+  def bc_add(left, right, scale \\ 0)
 
-    left_diff_count = diff_count(left, right)
-    right_diff_count = diff_count(right, left)
+  def bc_add(left, right, scale) when is_binary(left) and is_binary(right) do
+    {left_int, left_dec} = ApaNumber.from_string(left)
+    {right_int, right_dec} = ApaNumber.from_string(right)
 
-    # TODO: take care about signs
-    # first_left = String.first(left)
-    # first_right = String.first(right)
+    bc_add({left_int, left_dec}, {right_int, right_dec}, scale)
+  end
+
+  @spec bc_add({integer, integer}, {integer, integer}, integer) :: String.t()
+  def bc_add({left_int, left_dec}, {right_int, right_dec}, _scale)
+      when left_dec > right_dec do
+    {shifted_right_int, shifted_dec} = ApaNumber.shift({right_int, right_dec}, left_dec)
+
+    ApaNumber.to_string({left_int + shifted_right_int, shifted_dec})
+  end
+
+  @spec bc_add({integer, integer}, {integer, integer}, integer) :: String.t()
+  def bc_add({left_int, left_dec}, {right_int, right_dec}, _scale)
+      when left_dec < right_dec do
+    {shifted_left_int, shifted_dec} = ApaNumber.shift({left_int, left_dec}, right_dec)
+
+    ApaNumber.to_string({shifted_left_int + right_int, shifted_dec})
+  end
+
+  @spec bc_add({integer, integer}, {integer, integer}, integer) :: String.t()
+  def bc_add({left_int, left_dec}, {right_int, _right_dec}, _scale) do
+    ApaNumber.to_string({left_int + right_int, left_dec})
+  end
+
+  def bc_add(left, right, scale) do
+    raise(ArgumentError, "No string input.\n
+    left: #{inspect(left)}
+    right: #{inspect(right)}
+    scale: #{inspect(scale)}
+    ")
+  end
+
+  ################################################################################
+  # first naive impl only with integers using reverse digit list like in school
+  # its working in most cases but not very elegant and extensible
+
+  @doc """
+  Addition - internal function - please call Apa.add(left, right)
+  """
+  def bc_add_naive(left, right) when is_binary(left) and is_binary(right) do
+    left = ApaNumber.clean(left)
+    right = ApaNumber.clean(right)
+
+    left_diff_count = ApaNumber.diff_count(left, right)
+    right_diff_count = ApaNumber.diff_count(right, left)
 
     left_list =
       left
-      |> fill_up_string_leading_zeros(left_diff_count)
-      |> digits_list_reverse()
+      |> ApaNumber.fill_up_string_leading_zeros(left_diff_count)
+      |> ApaNumber.digits_list_reverse()
 
     right_list =
       right
-      |> fill_up_string_leading_zeros(right_diff_count)
-      |> digits_list_reverse()
+      |> ApaNumber.fill_up_string_leading_zeros(right_diff_count)
+      |> ApaNumber.digits_list_reverse()
 
     calc_partly(left_list, right_list, "")
   end
 
-  def bc_add(left, right) do
+  def bc_add_naive(left, right) do
     raise(ArgumentError, "No string input.\n
     left: #{inspect(left)}
     right: #{inspect(right)}
@@ -66,6 +106,6 @@ defmodule ApaAdd do
   end
 
   defp append_acc(acc, append_sum) do
-    "#{acc}#{to_string(append_sum)}"
+    "#{acc}#{Kernel.to_string(append_sum)}"
   end
 end
