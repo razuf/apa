@@ -11,26 +11,15 @@ defmodule ApaComp do
   """
 
   def bc_comp?(left, right) when is_binary(left) and is_binary(right) do
-    first_left = String.first(left)
-    first_right = String.first(right)
-
-    case {first_left, first_right} do
+    case {String.first(left), String.first(right)} do
       {"-", "-"} ->
         compare_without_sign(left, right)
 
       {_, "-"} ->
-        cond do
-          Apa.sub(left, right) == "0" -> 0
-          String.first(Apa.sub(left, right)) == "-" -> -1
-          true -> 1
-        end
+        compare_with_different_signs(left, right)
 
       {"-", _} ->
-        cond do
-          Apa.sub(left, right) == "0" -> 0
-          String.first(Apa.sub(left, right)) == "-" -> -1
-          true -> 1
-        end
+        compare_with_different_signs(left, right)
 
       {_, _} ->
         compare_without_sign(left, right)
@@ -57,6 +46,14 @@ defmodule ApaComp do
 
       true ->
         1
+    end
+  end
+
+  defp compare_with_different_signs(left, right) do
+    cond do
+      Apa.sub(left, right) == "0" -> 0
+      String.first(Apa.sub(left, right)) == "-" -> -1
+      true -> 1
     end
   end
 

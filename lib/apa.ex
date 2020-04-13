@@ -19,7 +19,7 @@ defmodule Apa do
     - [x] basic operations (`sub`)
     - [ ] basic operations (`mul`)
     - [ ] basic operations (`div`)
-    - [ ] comparison (`comp`)
+    - [x] comparison (`comp`)
     - [ ] exponentiation (`pow`)
 
   ## Installation
@@ -75,6 +75,11 @@ defmodule Apa do
       iex> "1" |> Apa.add("2") |> Apa.add("3.3") |> Apa.add("-3")
       "3.3"
 
+      Compared to standard Elixir - wrong value 6.6!
+      iex> 3.30000000000000004 + 3.30000000000000003
+      6.6
+
+      Correct with APA:
       iex> Apa.add("3.30000000000000004", "3.30000000000000003")
       "6.60000000000000007"
 
@@ -101,6 +106,10 @@ defmodule Apa do
 
       iex> Apa.add("1","+00120.000")
       "121"
+
+      iex> Apa.add("1.0e2", "1.1")
+      "101.1"
+
 
   """
   @spec add(String.t(), String.t(), integer) :: String.t()
@@ -130,6 +139,11 @@ defmodule Apa do
       iex> "1" |> Apa.sub("2") |> Apa.add("3.30") |> Apa.sub("2.40")
       "-0.1"
 
+      Compared to standard Elixir - wrong value 0.0!
+      iex> 3.30000000000000004 - 3.30000000000000003
+      0.0
+
+      this is fixed with APA:
       iex> Apa.sub("3.30000000000000004", "3.30000000000000003")
       "0.00000000000000001"
 
@@ -139,6 +153,68 @@ defmodule Apa do
 
   def sub(left, right, scale) do
     ApaSub.bc_sub(left, right, scale)
+  end
+
+  @doc """
+  APA : Arbitrary Precision Arithmetic - Comparison - ApaComp
+
+  Compares the left_operand to the right_operand and returns the result as an integer.
+
+  left - the left operand, as a string.
+  right - the right operand, as a string.
+  scale - the optional scale parameter is used to set the number of digits after the decimal place which will be used in the comparison.
+
+  Returns:
+   0 if the two operands are equal,
+   1 if the left_operand is larger than the right_operand,
+   -1 otherwise.
+
+  ## Examples
+
+      iex> Apa.comp?("9", "3")
+      1
+
+      iex> Apa.comp?("3", "9")
+      -1
+
+      iex> Apa.comp?("999999999999999999999999999","999999999999999999999999999")
+      0
+
+      iex> Apa.comp?("0","0")
+      0
+
+      iex> Apa.comp?("+0","-0")
+      0
+
+      iex> Apa.comp?("-0","-0")
+      0
+
+      iex> Apa.comp?("+1","-1")
+      1
+
+      iex> Apa.comp?("1.0","1.0")
+      0
+
+      iex> Apa.comp?("-1","-1.0")
+      0
+
+      Compared to standard Elixir this is fixed with APA - it is -1 !!!
+      iex> Apa.comp?("12","12.0000000000000001")
+      -1
+
+      Compared to standard Elixir this is fixed with APA - it is 1 !!!
+      iex> Apa.comp?("3.30000000000000004", "3.30000000000000003")
+      1
+
+      iex> Apa.comp?("1.1", "1.0")
+      1
+
+      iex> Apa.comp?("1.0", "1.1")
+      -1
+
+  """
+  def comp?(left, right) do
+    ApaComp.bc_comp?(left, right)
   end
 
   @doc """
@@ -181,11 +257,11 @@ defmodule Apa do
       iex> Apa.elixir_comp?("-1","-1.0")
       0
 
-      Wrong in normal Elixir - it should be -1:
+      Wrong in normal Elixir - (it should be -1):
       iex> Apa.elixir_comp?("12","12.0000000000000001")
       0
 
-      or adapted to this:
+      or adapted to another common calc = wrong too! (it sould be 1):
       iex> Apa.elixir_comp?("3.30000000000000004", "3.30000000000000003")
       0
 
@@ -195,66 +271,5 @@ defmodule Apa do
   """
   def elixir_comp?(left, right) do
     ApaComp.elixir_comp?(left, right)
-  end
-
-  @doc """
-  APA : Arbitrary Precision Arithmetic - Comparison - ApaComp
-
-  Compares the left_operand to the right_operand and returns the result as an integer.
-
-  left - the left operand, as a string.
-  right - the right operand, as a string.
-  scale - the optional scale parameter is used to set the number of digits after the decimal place which will be used in the comparison.
-
-  Returns:
-   0 if the two operands are equal,
-   1 if the left_operand is larger than the right_operand,
-   -1 otherwise.
-
-  ## Examples
-
-      iex> Apa.comp?("9", "3")
-      1
-
-      iex> Apa.comp?("3", "9")
-      -1
-
-      iex> Apa.comp?("999999999999999999999999999","999999999999999999999999999")
-      0
-
-      iex> Apa.comp?("0","0")
-      0
-
-      iex> Apa.comp?("+0","-0")
-      0
-
-      iex> Apa.comp?("-0","-0")
-      0
-
-      iex> Apa.comp?("+1","-1")
-      1
-
-      # iex> Apa.comp?("1.0","1.0")
-      0
-
-      # iex> Apa.comp?("-1","-1.0")
-      0
-
-      Fixed here - it is -1 !!!
-      # iex> Apa.comp?("12.0000000000000001", "12")
-      1
-
-      # iex> Apa.comp?("3.30000000000000004", "3.30000000000000003")
-      1
-
-      # iex> Apa.comp?("1.1", "1.0")
-      1
-
-      # iex> Apa.comp?("1.0", "1.1")
-      -1
-
-  """
-  def comp?(left, right) do
-    ApaComp.bc_comp?(left, right)
   end
 end
