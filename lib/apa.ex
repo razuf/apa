@@ -249,6 +249,84 @@ defmodule Apa do
   end
 
   @doc """
+  APA : Arbitrary Precision Arithmetic - Multiplication
+
+  ## Examples
+
+      iex> Apa.mul("3", "2")
+      "6"
+
+      iex> Apa.mul("2", "3")
+      "6"
+
+      iex> Apa.mul("2", "-3")
+      "-6"
+
+      iex> Apa.mul("-2", "3")
+      "-6"
+
+      iex> Apa.mul("-2", "-3")
+      "6"
+
+      iex> "1" |> Apa.mul("2") |> Apa.mul("3")
+      "6"
+
+  """
+  @spec mul(String.t(), String.t(), integer) :: String.t()
+  def mul(left, right, scale \\ 0)
+
+  def mul(left, right, scale) do
+    ApaMul.bc_mul(left, right, scale)
+  end
+
+  def left * right when is_binary(left) and is_binary(right) do
+    Apa.mul(left, right)
+  end
+
+  def left * right do
+    Kernel.*(left, right)
+  end
+
+  @doc """
+  APA : Arbitrary Precision Arithmetic - Division
+
+  ## Examples
+
+      iex> Apa.div("6", "2")
+      "3"
+
+      iex> Apa.div("6", "3")
+      "2"
+
+      iex> Apa.div("6", "-3")
+      "-2"
+
+      iex> Apa.div("-6", "3")
+      "-2"
+
+      iex> Apa.div("-6", "-3")
+      "2"
+
+      iex> "18" |> Apa.div("2") |> Apa.div("3")
+      "3"
+
+  """
+  @spec div(String.t(), String.t(), integer) :: String.t()
+  def div(left, right, scale \\ 0)
+
+  def div(left, right, scale) do
+    ApaDiv.bc_div(left, right, scale)
+  end
+
+  def left / right when is_binary(left) and is_binary(right) do
+    Apa.div(left, right)
+  end
+
+  def left / right do
+    Kernel./(left, right)
+  end
+
+  @doc """
   APA : Arbitrary Precision Arithmetic - Comparison - ApaComp
 
   Compares the left_operand to the right_operand and returns the result as an integer.

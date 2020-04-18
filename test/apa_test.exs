@@ -21,6 +21,14 @@ defmodule ApaTest do
     assert Apa.sub("3", "2") == "1"
   end
 
+  test "mul test" do
+    assert Apa.mul("3", "2") == "6"
+  end
+
+  test "div test" do
+    assert Apa.div("6", "2") == "3"
+  end
+
   test "Apa.add - some random numbers - also with leading and trailing zeros" do
     for _n <- 1..3 do
       left =
