@@ -18,7 +18,6 @@ defmodule ApaAdd do
     bc_add({left_int, left_dec}, {right_int, right_dec}, scale)
   end
 
-  @spec bc_add({integer, integer}, {integer, integer}, integer) :: String.t()
   def bc_add({left_int, left_dec}, {right_int, right_dec}, _scale)
       when left_dec < right_dec do
     {shifted_right_int, shifted_dec} = ApaNumber.shift_to({right_int, right_dec}, left_dec)

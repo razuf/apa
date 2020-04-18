@@ -11,6 +11,80 @@ defmodule Apa do
   For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals(limit need to be checked - see below TO CHECK:), represented as strings. Inspired by BCMath/PHP.
   This is especially useful when working with floating-point numbers, as these introduce small but in some case significant rounding errors.
 
+  I started this project to learn for myself - so the focus was on learning and have fun!
+  But on a short research I found the existing libs have some limits and disadvantages:
+
+  EAPA (Erlang Arbitrary Precision Arithmetic):
+  a) Customized precision up to 126 decimal places (current realization)
+  Why only 126 decimal places? Apa should not have that limit!
+  b) EAPA is a NIF extension written on Rust -> good for performance, but bad in case of dependency f.e. for nerves
+
+  some limits in standard Erlang/Elixir:
+  :math.pow(1.618033988749895, 10000)
+  ** (ArithmeticError) bad argument in arithmetic expression
+
+  0.30000000000000004 - 0.30000000000000003
+  0.0
+
+  0.1 + 0.2
+  0.30000000000000004
+
+  9007199254740992.0 - 9007199254740991.0
+  1.0
+  9007199254740993.0 - 9007199254740992.0
+  0.0
+  9007199254740994.0 - 9007199254740993.0
+  2.0
+  87654321098765432.0 - 87654321098765431.0
+  16.0
+
+  0.123456789e-100 * 0.123456789e-100
+  1.524157875019052e-202
+  0.123456789e-200 * 0.123456789e-200
+  0.0
+
+  Later I found Decimal which looks very nice and useful (written by Eric Meadows-Jönsson!) -
+  so there is already a solution nice, stable and full featured!
+  I used it in Phoenix with Ecto without thinking about it ... but that's life.
+
+  Anyway I had fun on Eastern 2020. ;-)
+
+  A little feature I could offer compared to Decimal (but of course could be easily expanded there too):
+
+  "0.30000000000000004" - "0.30000000000000003"
+  "0.00000000000000001"
+
+  or calc and compare directly with strings (ecto/database):
+
+  with Decimal:
+
+  schema "products" do
+    field :name, :string
+    field :price, :decimal
+    timestamps()
+  end
+
+  %Product{
+    name: "Apple",
+    price: 3,
+  }
+  cart_total = Decimal.to_string(Decimal.mult(Decimal.new(product.price), Decimal.new(cart_quantity)))
+
+  with Apa:
+
+  schema "product" do
+    field :name, :string
+    field :price, :string
+    timestamps()
+  end
+
+  %Product{
+    name: "Apple",
+    price: "3",
+  }
+  cart_total = product.price * cart_quantity
+
+
   ## Features
 
     An incomplete list of supported and planned features
@@ -20,7 +94,6 @@ defmodule Apa do
     - [ ] basic operations (`mul`)
     - [ ] basic operations (`div`)
     - [x] comparison (`comp`)
-    - [ ] exponentiation (`pow`)
 
   ## Installation
 
@@ -29,19 +102,17 @@ defmodule Apa do
 
     def deps do
       [
-        {:apa, "~> 0.1.0"}
+        {:apa, "~> 0.2.0"}
       ]
     end
 
 
   ## Usage
 
-    Apa.add("123", "456")
+    Apa.add("1", "2") # "3"
+    Apa.sub("3", "2") # "1"
 
   """
-
-  alias ApaAdd
-  alias ApaSub
 
   @doc """
   APA : Arbitrary Precision Arithmetic - Addition
@@ -119,6 +190,20 @@ defmodule Apa do
     ApaAdd.bc_add(left, right, scale)
   end
 
+  def left + right when is_binary(left) and is_binary(right) do
+    Apa.add(left, right)
+  end
+
+  def {left_int, left_dec} + {right_int, right_dec}
+      when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
+             is_integer(right_dec) do
+    ApaAdd.bc_add({left_int, left_dec}, {right_int, right_dec}, 0)
+  end
+
+  def left + right do
+    Kernel.+(left, right)
+  end
+
   @doc """
   APA : Arbitrary Precision Arithmetic - Subtraction
 
@@ -155,6 +240,14 @@ defmodule Apa do
     ApaSub.bc_sub(left, right, scale)
   end
 
+  def left - right when is_binary(left) and is_binary(right) do
+    Apa.sub(left, right)
+  end
+
+  def left - right do
+    Kernel.-(left, right)
+  end
+
   @doc """
   APA : Arbitrary Precision Arithmetic - Comparison - ApaComp
 
@@ -171,50 +264,50 @@ defmodule Apa do
 
   ## Examples
 
-      iex> Apa.comp?("9", "3")
+      iex> Apa.comp("9", "3")
       1
 
-      iex> Apa.comp?("3", "9")
+      iex> Apa.comp("3", "9")
       -1
 
-      iex> Apa.comp?("999999999999999999999999999","999999999999999999999999999")
+      iex> Apa.comp("999999999999999999999999999","999999999999999999999999999")
       0
 
-      iex> Apa.comp?("0","0")
+      iex> Apa.comp("0","0")
       0
 
-      iex> Apa.comp?("+0","-0")
+      iex> Apa.comp("+0","-0")
       0
 
-      iex> Apa.comp?("-0","-0")
+      iex> Apa.comp("-0","-0")
       0
 
-      iex> Apa.comp?("+1","-1")
+      iex> Apa.comp("+1","-1")
       1
 
-      iex> Apa.comp?("1.0","1.0")
+      iex> Apa.comp("1.0","1.0")
       0
 
-      iex> Apa.comp?("-1","-1.0")
+      iex> Apa.comp("-1","-1.0")
       0
 
       Compared to standard Elixir this is fixed with APA - it is -1 !!!
-      iex> Apa.comp?("12","12.0000000000000001")
+      iex> Apa.comp("12","12.0000000000000001")
       -1
 
       Compared to standard Elixir this is fixed with APA - it is 1 !!!
-      iex> Apa.comp?("3.30000000000000004", "3.30000000000000003")
+      iex> Apa.comp("3.30000000000000004", "3.30000000000000003")
       1
 
-      iex> Apa.comp?("1.1", "1.0")
+      iex> Apa.comp("1.1", "1.0")
       1
 
-      iex> Apa.comp?("1.0", "1.1")
+      iex> Apa.comp("1.0", "1.1")
       -1
 
   """
-  def comp?(left, right) do
-    ApaComp.bc_comp?(left, right)
+  def comp(left, right) do
+    ApaComp.bc_comp(left, right)
   end
 
   @doc """
@@ -233,43 +326,43 @@ defmodule Apa do
 
   ## Examples
 
-      iex> Apa.elixir_comp?("9", "3")
+      iex> Apa.elixir_comp("9", "3")
       1
 
-      iex> Apa.elixir_comp?("999999999999999999999999999","999999999999999999999999999")
+      iex> Apa.elixir_comp("999999999999999999999999999","999999999999999999999999999")
       0
 
-      iex> Apa.elixir_comp?("0","0")
+      iex> Apa.elixir_comp("0","0")
       0
 
-      iex> Apa.elixir_comp?("+0","-0")
+      iex> Apa.elixir_comp("+0","-0")
       0
 
-      iex> Apa.elixir_comp?("-0","-0")
+      iex> Apa.elixir_comp("-0","-0")
       0
 
-      iex> Apa.elixir_comp?("+1","-1")
+      iex> Apa.elixir_comp("+1","-1")
       1
 
-      iex> Apa.elixir_comp?("1","1.0")
+      iex> Apa.elixir_comp("1","1.0")
       0
 
-      iex> Apa.elixir_comp?("-1","-1.0")
+      iex> Apa.elixir_comp("-1","-1.0")
       0
 
       Wrong in normal Elixir - (it should be -1):
-      iex> Apa.elixir_comp?("12","12.0000000000000001")
+      iex> Apa.elixir_comp("12","12.0000000000000001")
       0
 
       or adapted to another common calc = wrong too! (it sould be 1):
-      iex> Apa.elixir_comp?("3.30000000000000004", "3.30000000000000003")
+      iex> Apa.elixir_comp("3.30000000000000004", "3.30000000000000003")
       0
 
-      iex> Apa.elixir_comp?("1.0", "1.1")
+      iex> Apa.elixir_comp("1.0", "1.1")
       -1
 
   """
-  def elixir_comp?(left, right) do
-    ApaComp.elixir_comp?(left, right)
+  def elixir_comp(left, right) do
+    ApaComp.elixir_comp(left, right)
   end
 end
