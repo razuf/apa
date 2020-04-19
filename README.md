@@ -1,9 +1,10 @@
 # Apa
+
 ![Elixir CI](https://github.com/razuf/apa/workflows/Elixir%20CI/badge.svg)
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 
-For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals(limit need to be checked - see below TO CHECK:), represented as strings. Inspired by BCMath/PHP.
+For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals(limit need to be checked), represented as strings. Inspired by BCMath/PHP.
 This is especially useful when working with floating-point numbers, as these introduce small but in some case significant rounding errors.
 
 I started this project to learn for myself - so the focus was on learning and have fun!
