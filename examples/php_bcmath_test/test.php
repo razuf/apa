@@ -12,5 +12,4 @@ for ($i = 1; $i <= 1000000; $i++) {
 $end= time();
 
 echo "\n".($end-$start)." s\n";
-echo bcmod('5.7', '1.3');
 ?>
