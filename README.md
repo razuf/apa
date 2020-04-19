@@ -1,4 +1,5 @@
 # Apa
+![Elixir CI](https://github.com/razuf/apa/workflows/Elixir%20CI/badge.svg)
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 
