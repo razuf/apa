@@ -37,7 +37,7 @@ defmodule ApaTest do
   end
 
   test "Apa.add - some random numbers - also with leading and trailing zeros" do
-    for _n <- 1..3 do
+    for _n <- 1..2 do
       left =
         Enum.take(
           StreamData.integer(0..9),
@@ -58,7 +58,7 @@ defmodule ApaTest do
   end
 
   test "elixir_add - some random numbers - also with leading and trailing zeros" do
-    for _n <- 1..3 do
+    for _n <- 1..2 do
       left =
         Enum.take(
           StreamData.integer(0..9),
