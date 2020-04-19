@@ -9,8 +9,15 @@ defmodule ApaTest do
   doctest Apa
   doctest ApaNumber
 
-  test "wrong input" do
+  test "wrong input - no strings" do
     assert_raise ArgumentError, fn -> Apa.add(1, 2) end
+    assert_raise ArgumentError, fn -> Apa.sub(1, 2) end
+    assert_raise ArgumentError, fn -> Apa.mul(1, 2) end
+    assert_raise ArgumentError, fn -> Apa.div(1, 2) end
+  end
+
+  test "wrong division with 0" do
+    assert_raise ArgumentError, fn -> Apa.div("1", "0") end
   end
 
   test "add test" do

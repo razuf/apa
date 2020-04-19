@@ -14,4 +14,12 @@ defmodule ApaSub do
   def bc_sub(left, right, scale) when is_binary(left) and is_binary(right) do
     Apa.add(left, ApaNumber.add_minus_sign(right), scale)
   end
+
+  def bc_sub(left, right, scale) do
+    raise(ArgumentError, "No string input.\n
+    left: #{inspect(left)}
+    right: #{inspect(right)}
+    scale: #{inspect(scale)}
+    ")
+  end
 end

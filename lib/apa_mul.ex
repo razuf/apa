@@ -21,4 +21,12 @@ defmodule ApaMul do
   def bc_mul({left_int, left_exp}, {right_int, right_exp}, _scale) do
     ApaNumber.to_string({left_int * right_int, left_exp + right_exp})
   end
+
+  def bc_mul(left, right, scale) do
+    raise(ArgumentError, "No string input.\n
+    left: #{inspect(left)}
+    right: #{inspect(right)}
+    scale: #{inspect(scale)}
+    ")
+  end
 end

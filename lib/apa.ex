@@ -94,7 +94,10 @@ defmodule Apa do
     - [x] basic operations (`mul`)
     - [x] basic operations (`div`)
     - [x] comparison (`comp`)
+    - [ ] scale (number of digits after the decimal place in the result)
     - [ ] rounding
+    - [ ] Infinity and NaN
+    - [ ] string format for result
 
   ## Installation
 

@@ -15,7 +15,24 @@ defmodule ApaDiv do
     {left_int, left_exp} = ApaNumber.from_string(left)
     {right_int, right_exp} = ApaNumber.from_string(right)
 
+    bc_div({left_int, left_exp}, {right_int, right_exp}, scale)
+  end
+
+  def bc_div({_left_int, _left_exp}, {right_int, _right_exp}, _scale)
+      when right_int == 0 do
+    raise(ArgumentError, "Impossible operation - divisor == 0 - see doc.")
+  end
+
+  def bc_div({left_int, left_exp}, {right_int, right_exp}, scale) do
     bc_div({left_int, left_exp}, {right_int, right_exp}, scale, rem(left_int, right_int), 0)
+  end
+
+  def bc_div(left, right, scale) do
+    raise(ArgumentError, "No string input.\n
+    left: #{inspect(left)}
+    right: #{inspect(right)}
+    scale: #{inspect(scale)}
+    ")
   end
 
   def bc_div({left_int, left_exp}, {right_int, right_exp}, _scale, rem, _acc)
