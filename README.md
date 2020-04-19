@@ -4,11 +4,11 @@
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 
-For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals(limit need to be checked), represented as strings. Inspired by BCMath/PHP.
+For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals (limit need to be checked), represented as strings. Inspired by BCMath/PHP.
 This is especially useful when working with floating-point numbers, as these introduce small but in some case significant rounding errors.
 
 I started this project to learn for myself - so the focus was on learning and have fun!
-But on a short research I found the existing libs have some limits and disadvantages:
+On a short research I found the existing libs have some limits and disadvantages:
 
 EAPA (Erlang Arbitrary Precision Arithmetic):
 a) Customized precision up to 126 decimal places (current realization)
@@ -16,28 +16,37 @@ Why only 126 decimal places? Apa should not have that limit!
 b) EAPA is a NIF extension written on Rust -> performance fine, but bad in case of dependencies f.e. for nerves
 
 some limits in standard Erlang/Elixir:
-:math.pow(1.618033988749895, 10000)
-** (ArithmeticError) bad argument in arithmetic expression
 
-0.30000000000000004 - 0.30000000000000003
+```elixir
+iex> 0.30000000000000004 - 0.30000000000000003
 0.0
 
-0.1 + 0.2
+iex> 0.1 + 0.2
 0.30000000000000004
 
-9007199254740992.0 - 9007199254740991.0
+iex> 0.1 + 0.2
+0.30000000000000004
+
+
+iex> 9007199254740992.0 - 9007199254740991.0
 1.0
-9007199254740993.0 - 9007199254740992.0
+iex> 9007199254740993.0 - 9007199254740992.0
 0.0
-9007199254740994.0 - 9007199254740993.0
+iex> 9007199254740994.0 - 9007199254740993.0
 2.0
-87654321098765432.0 - 87654321098765431.0
+
+iex> 87654321098765432.0 - 87654321098765431.0
 16.0
 
-0.123456789e-100 * 0.123456789e-100
+iex> 0.123456789e-100 * 0.123456789e-100
 1.524157875019052e-202
-0.123456789e-200 * 0.123456789e-200
+iex> 0.123456789e-200 * 0.123456789e-200
 0.0
+
+iex> :math.pow(2, 1500)
+** (ArithmeticError) bad argument in arithmetic expression
+
+```
 
 Later I found Decimal which looks very nice and useful (written by Eric Meadows-Jönsson!) -
 so there is already a solution nice, stable and full featured!
@@ -47,13 +56,16 @@ Anyway I had fun on Eastern 2020. ;-)
 
 A little feature I could offer compared to Decimal (but of course could be easily expanded there too):
 
+```elixir
 "0.30000000000000004" - "0.30000000000000003"
 "0.00000000000000001"
+```
 
-or calc and compare directly with strings (ecto/database):
+Or calc and compare directly with strings (ecto/database)
 
 with Decimal:
 
+```elixir
 schema "products" do
   field :name, :string
   field :price, :decimal
@@ -65,9 +77,11 @@ end
   price: 3,
 }
 cart_total = Decimal.to_string(Decimal.mult(Decimal.new(product.price), Decimal.new(cart_quantity)))
+```
 
 with Apa:
 
+```elixir
 schema "product" do
   field :name, :string
   field :price, :string
@@ -79,11 +93,11 @@ end
   price: "3",
 }
 cart_total = product.price * cart_quantity
-
+```
 
 ## Features
 
-  A list of supported and planned features (maye incomplete)
+  A list of supported and planned features (maybe incomplete)
 
   - [x] basic operations (`add`)
   - [x] basic operations (`sub`)
