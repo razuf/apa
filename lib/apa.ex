@@ -106,7 +106,7 @@ defmodule Apa do
 
     def deps do
       [
-        {:apa, "~> 0.2.0"}
+        {:apa, "~> 0.3.0"}
       ]
     end
 

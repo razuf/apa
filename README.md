@@ -101,7 +101,7 @@ cart_total = product.price * cart_quantity
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.1.0"}
+      {:apa, "~> 0.3.0"}
     ]
   end
   ```
