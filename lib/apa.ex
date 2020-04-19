@@ -17,7 +17,7 @@ defmodule Apa do
   EAPA (Erlang Arbitrary Precision Arithmetic):
   a) Customized precision up to 126 decimal places (current realization)
   Why only 126 decimal places? Apa should not have that limit!
-  b) EAPA is a NIF extension written on Rust -> good for performance, but bad in case of dependency f.e. for nerves
+  b) EAPA is a NIF extension written on Rust -> performance fine, but bad in case of dependencies f.e. for nerves
 
   some limits in standard Erlang/Elixir:
   :math.pow(1.618033988749895, 10000)
@@ -87,13 +87,14 @@ defmodule Apa do
 
   ## Features
 
-    An incomplete list of supported and planned features
+    A list of supported and planned features (maye incomplete)
 
     - [x] basic operations (`add`)
     - [x] basic operations (`sub`)
-    - [ ] basic operations (`mul`)
-    - [ ] basic operations (`div`)
+    - [x] basic operations (`mul`)
+    - [x] basic operations (`div`)
     - [x] comparison (`comp`)
+    - [ ] rounding
 
   ## Installation
 
@@ -109,8 +110,15 @@ defmodule Apa do
 
   ## Usage
 
+    import Apa
+    import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
+
     Apa.add("1", "2") # "3"
     Apa.sub("3", "2") # "1"
+
+    price = "3.50 Euro"
+    quantity = "12"
+    total_string = price * quantity
 
   """
 
@@ -310,9 +318,12 @@ defmodule Apa do
       iex> "18" |> Apa.div("2") |> Apa.div("3")
       "3"
 
+      iex> Apa.div("222.2001", "2222.001")
+      "0.1"
+
   """
   @spec div(String.t(), String.t(), integer) :: String.t()
-  def div(left, right, scale \\ 0)
+  def div(left, right, scale \\ 30)
 
   def div(left, right, scale) do
     ApaDiv.bc_div(left, right, scale)

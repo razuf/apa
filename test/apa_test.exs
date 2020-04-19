@@ -187,7 +187,22 @@ defmodule ApaTest do
 
     assert "132342342342300000000455987.88" ==
              "132342342342300000000000000" + "456e3" - "0012.1200"
+
+    assert "48.884" == "2.2" * "22.22"
+    assert "4444444444.4444444444444" == "0.00000000002" * "222222222222222222222.22"
+    assert "-48.884" == "0002.20000000" * "-00022.22000000"
+    assert "222.2001" == "0.1" * "2222.001"
+
+    assert "10" == "2222.001" / "222.2001"
+    assert "4.803996494145874505235775423" == "17.123" / "3.564324"
+
+    price = "3.51 Euro"
+    quantity = "12"
+    total_string = price * quantity
+    assert total_string == "42.12"
   end
+
+  ###################################################################
 
   defp elixir_int_add(left, right) do
     Kernel.to_string(String.to_integer(left) + String.to_integer(right))

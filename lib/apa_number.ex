@@ -266,6 +266,13 @@ defmodule ApaNumber do
     |> String.to_integer()
   end
 
+  def fill_up_trailing_zeros(int_value, count_zeros) do
+    int_value
+    |> Kernel.to_string()
+    |> fill_up_string_trailing_zeros(count_zeros)
+    |> String.to_integer()
+  end
+
   defp remove_zeros(list, 0), do: list
 
   defp remove_zeros([head | tail], acc) do

@@ -12,6 +12,13 @@ defmodule ApaMul do
 
   @spec bc_mul(String.t(), String.t(), integer) :: String.t()
   def bc_mul(left, right, scale) when is_binary(left) and is_binary(right) do
-    to_string(String.to_integer(left) * String.to_integer(right))
+    {left_int, left_exp} = ApaNumber.from_string(left)
+    {right_int, right_exp} = ApaNumber.from_string(right)
+
+    bc_mul({left_int, left_exp}, {right_int, right_exp}, scale)
+  end
+
+  def bc_mul({left_int, left_exp}, {right_int, right_exp}, _scale) do
+    ApaNumber.to_string({left_int * right_int, left_exp + right_exp})
   end
 end
