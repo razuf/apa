@@ -27,41 +27,4 @@ defmodule ApaComp do
       true -> 1
     end
   end
-
-  @doc """
-  Comparison - internal function - only for test!!!
-  Normal Elixir Comparison adapted to strings to use for tests with ApaComp
-  Not very nice implementation
-  """
-  def elixir_comp(left, right) do
-    cond do
-      String.contains?(left, ".") and String.contains?(right, ".") ->
-        cond do
-          String.to_float(left) - String.to_float(right) > 0 -> 1
-          String.to_float(left) - String.to_float(right) < 0 -> -1
-          String.to_float(left) - String.to_float(right) == 0 -> 0
-        end
-
-      String.contains?(left, ".") and not String.contains?(right, ".") ->
-        cond do
-          String.to_float(left) - String.to_integer(right) > 0 -> 1
-          String.to_float(left) - String.to_integer(right) < 0 -> -1
-          String.to_float(left) - String.to_integer(right) == 0 -> 0
-        end
-
-      not String.contains?(left, ".") and String.contains?(right, ".") ->
-        cond do
-          String.to_integer(left) - String.to_float(right) > 0 -> 1
-          String.to_integer(left) - String.to_float(right) < 0 -> -1
-          String.to_integer(left) - String.to_float(right) == 0 -> 0
-        end
-
-      not String.contains?(left, ".") and not String.contains?(right, ".") ->
-        cond do
-          String.to_integer(left) - String.to_integer(right) > 0 -> 1
-          String.to_integer(left) - String.to_integer(right) < 0 -> -1
-          String.to_integer(left) - String.to_integer(right) == 0 -> 0
-        end
-    end
-  end
 end
