@@ -4,30 +4,42 @@
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 
-For arbitrary precision mathematics - which supports numbers of any size and precision up to a limit of decimals (limit need to be checked), represented as strings. Inspired by BCMath/PHP.
+For arbitrary precision mathematics - which supports numbers of any size and precision up to nearly unlimited of decimals (internal Elixir integer math), represented as strings. Inspired by BCMath/PHP.
 This is especially useful when working with floating-point numbers, as these introduce small but in some case significant rounding errors.
 
+## Intention, Pro & Cons
+
 I started this project to learn for myself - so the focus was on learning and have fun!
-On a short research I found the existing libs have some limits and disadvantages:
+You could use it if you like - there are some test coverage - but for production I would recomend the [Decimal](https://github.com/ericmj/decimal) package!
 
-EAPA (Erlang Arbitrary Precision Arithmetic):
-a) Customized precision up to 126 decimal places (current realization)
-Why only 126 decimal places? Apa should not have that limit!
-b) EAPA is a NIF extension written on Rust -> performance fine, but bad in case of dependencies f.e. for nerves
 
-some limits in standard Erlang/Elixir:
+Some limits and 'bugs' in standard Erlang/Elixir:
 
 ```elixir
 iex> 0.30000000000000004 - 0.30000000000000003
 0.0
+```
 
+with Apa:
+```elixir
+"0.30000000000000004" - "0.30000000000000003"
+"0.00000000000000001"
+```
+
+Elixir:
+```elixir
 iex> 0.1 + 0.2
 0.30000000000000004
+```
 
-iex> 0.1 + 0.2
-0.30000000000000004
+with Apa:
+```elixir
+"0.1" + "0.2"
+"0.3"
+```
 
-
+Elixir:
+```elixir
 iex> 9007199254740992.0 - 9007199254740991.0
 1.0
 iex> 9007199254740993.0 - 9007199254740992.0
@@ -45,23 +57,30 @@ iex> 0.123456789e-200 * 0.123456789e-200
 
 iex> :math.pow(2, 1500)
 ** (ArithmeticError) bad argument in arithmetic expression
-
 ```
 
-Later I found Decimal which looks very nice and useful (written by Eric Meadows-Jönsson!) -
-so there is already a solution nice, stable and full featured!
+On a short research I found the existing lib EAPA have some limits and disadvantages:
+
+[EAPA](https://github.com/Vonmo/eapa) (Erlang/Elixir Arbitrary-Precision Arithmetic)
+a) Customized precision up to 126 decimal places (current realization)
+Why only 126 decimal places? Apa should not have that limit!
+
+b) EAPA is a NIF extension written on Rust -> performance fine, but bad in case of dependencies f.e. for [Nerves](https://www.nerves-project.org/).
+Apa is in pure Elixir with no dependency - running on any [Nerves device](https://hexdocs.pm/nerves/targets.html/).
+
+Later I found [Decimal](https://github.com/ericmj/decimal) which looks very nice and useful (written by Eric Meadows-Jönsson!) - so there is already a solution - nice, stable and full featured!
 I used it in Phoenix with Ecto without thinking about it ... but that's life.
 
-Anyway I had fun on Eastern 2020. ;-)
+Anyway I had fun with Apa on Eastern 2020. ;-)
 
-A little feature I could offer compared to Decimal (but of course could be easily expanded there too):
+A little feature I could offer compared to [Decimal](https://github.com/ericmj/decimal) (but of course could be easily expanded there too)
 
 ```elixir
 "0.30000000000000004" - "0.30000000000000003"
 "0.00000000000000001"
 ```
 
-Or calc and compare directly with strings (ecto/database)
+Or calc and compare directly with strings in case of ecto/database
 
 with Decimal:
 
@@ -95,6 +114,8 @@ end
 cart_total = product.price * cart_quantity
 ```
 
+Could be useful with [CubDB](https://github.com/lucaong/cubdb) (pure Elixir key/value database).
+
 ## Features
 
   A list of supported and planned features (maybe incomplete)
@@ -108,7 +129,7 @@ cart_total = product.price * cart_quantity
   - [ ] rounding
   - [ ] Infinity and NaN
   - [ ] string format for result
-  - [ ] performance - f.e. benchee check - is this pure Elixir implementation fast enough for normal applications (normal work means not number crunching)
+  - [ ] performance - f.e. benchee check - this pure Elixir implementation looks like fast enough for normal applications (normal means not for number crunching)
 
 ## Installation
 
@@ -125,7 +146,6 @@ cart_total = product.price * cart_quantity
 ## Usage
 
   ```elixir
-
   import Apa
   import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
 
@@ -134,8 +154,7 @@ cart_total = product.price * cart_quantity
 
   price = "3.50 Euro"
   quantity = "12"
-  total_string = price * quantity
-
+  total_string = price * quantity # "42.0"
   ```
 
 
