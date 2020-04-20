@@ -26,16 +26,17 @@ defmodule Apa.MixProject do
     [
       {:credo, "~> 1.3", only: [:dev], runtime: false},
       {:stream_data, "~> 0.1", only: :test},
-      {:ex_doc, ">= 0.0.0", only: :dev}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
   defp description() do
-    "Arbitrary precision arithmetic."
+    "APA - Arbitrary precision arithmetic."
   end
 
   defp package() do
     [
+      name: "apa",
       maintainers: ["Ralph Zühlsdorf"],
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/razuf/apa"}
