@@ -1,0 +1,3 @@
+%{
+  "apa": {:git, "https://github.com/razuf/apa.git", "f3f2e66779743dc9287373a5a347bef32bce446b", []},
+}
