@@ -10,6 +10,8 @@ defmodule Apa do
   I started this project to learn for myself - so the focus was on learning and have fun!
   You could use it if you like - there are some test coverage -
   but for production I would recomend the Decimal (https://github.com/ericmj/decimal) package!
+
+  You are welcome to read the code and if you find something that could be done better, please let me know.
   """
 
   @doc """
@@ -287,5 +289,35 @@ defmodule Apa do
   """
   def comp(left, right) do
     ApaComp.bc_comp(left, right)
+  end
+
+  @doc """
+  APA : Arbitrary Precision Arithmetic - Homage to Douglas Adams
+
+  The Answer to the Ultimate Question of Life, the Universe, and Everything
+
+  ## Examples
+
+
+      iex> Apa.answer("?", "Ultimate Question of Life, the Universe, and Everything")
+      "42"
+
+      iex> Apa.answer("?", "Das Leben, das Universum und der ganze Rest")
+      "42"
+
+      iex> Apa.answer("six by", "nine")
+      "42"
+
+  """
+  def answer("?", "Ultimate Question of Life, the Universe, and Everything") do
+    "42"
+  end
+
+  def answer("?", "Das Leben, das Universum und der ganze Rest") do
+    "42"
+  end
+
+  def answer("six by", "nine") do
+    "Forty two"
   end
 end
