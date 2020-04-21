@@ -15,11 +15,7 @@ defmodule ApaMul do
     {left_int, left_exp} = ApaNumber.from_string(left)
     {right_int, right_exp} = ApaNumber.from_string(right)
 
-    bc_mul({left_int, left_exp}, {right_int, right_exp}, scale)
-  end
-
-  def bc_mul({left_int, left_exp}, {right_int, right_exp}, _scale) do
-    ApaNumber.to_string({left_int * right_int, left_exp + right_exp})
+    bc_mul_apa_number({left_int, left_exp}, {right_int, right_exp}, scale)
   end
 
   def bc_mul(left, right, scale) do
@@ -28,5 +24,10 @@ defmodule ApaMul do
     right: #{inspect(right)}
     scale: #{inspect(scale)}
     ")
+  end
+
+  @spec bc_mul_apa_number({integer(), integer()}, {integer(), integer()}, integer()) :: String.t()
+  def bc_mul_apa_number({left_int, left_exp}, {right_int, right_exp}, _scale) do
+    ApaNumber.to_string({left_int * right_int, left_exp + right_exp})
   end
 end

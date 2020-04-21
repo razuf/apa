@@ -15,25 +15,7 @@ defmodule ApaAdd do
     {left_int, left_dec} = ApaNumber.from_string(left)
     {right_int, right_dec} = ApaNumber.from_string(right)
 
-    bc_add({left_int, left_dec}, {right_int, right_dec}, scale)
-  end
-
-  def bc_add({left_int, left_dec}, {right_int, right_dec}, _scale)
-      when left_dec < right_dec do
-    {shifted_right_int, shifted_dec} = ApaNumber.shift_to({right_int, right_dec}, left_dec)
-
-    ApaNumber.to_string({left_int + shifted_right_int, shifted_dec})
-  end
-
-  def bc_add({left_int, left_dec}, {right_int, right_dec}, _scale)
-      when left_dec > right_dec do
-    {shifted_left_int, shifted_dec} = ApaNumber.shift_to({left_int, left_dec}, right_dec)
-
-    ApaNumber.to_string({shifted_left_int + right_int, shifted_dec})
-  end
-
-  def bc_add({left_int, left_dec}, {right_int, _right_dec}, _scale) do
-    ApaNumber.to_string({left_int + right_int, left_dec})
+    bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, scale)
   end
 
   def bc_add(left, right, scale) do
@@ -42,5 +24,24 @@ defmodule ApaAdd do
     right: #{inspect(right)}
     scale: #{inspect(scale)}
     ")
+  end
+
+  @spec bc_add_apa_number({integer(), integer()}, {integer(), integer()}, integer()) :: String.t()
+  def bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, _scale)
+      when left_dec < right_dec do
+    {shifted_right_int, shifted_dec} = ApaNumber.shift_to({right_int, right_dec}, left_dec)
+
+    ApaNumber.to_string({left_int + shifted_right_int, shifted_dec})
+  end
+
+  def bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, _scale)
+      when left_dec > right_dec do
+    {shifted_left_int, shifted_dec} = ApaNumber.shift_to({left_int, left_dec}, right_dec)
+
+    ApaNumber.to_string({shifted_left_int + right_int, shifted_dec})
+  end
+
+  def bc_add_apa_number({left_int, left_dec}, {right_int, _right_dec}, _scale) do
+    ApaNumber.to_string({left_int + right_int, left_dec})
   end
 end

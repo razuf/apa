@@ -22,4 +22,9 @@ defmodule ApaSub do
     scale: #{inspect(scale)}
     ")
   end
+
+  @spec bc_sub_apa_number({integer(), integer()}, {integer(), integer()}, integer()) :: String.t()
+  def bc_sub_apa_number({left_int, left_dec}, {right_int, right_dec}, _scale) do
+    ApaAdd.bc_add_apa_number({left_int, left_dec}, {right_int * -1, right_dec}, 0)
+  end
 end

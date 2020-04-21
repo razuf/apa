@@ -1,6 +1,6 @@
 # Apa
 
-![Elixir CI](https://github.com/razuf/apa/workflows/Elixir%20CI/badge.svg)
+![Elixir CI status](https://github.com/razuf/apa/workflows/Elixir%20CI/badge.svg)&nbsp;[![codecov](https://codecov.io/gh/razuf/apa/branch/master/graph/badge.svg)](https://codecov.io/gh/razuf/apa)
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 

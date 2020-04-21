@@ -188,9 +188,10 @@ defmodule ApaTest do
     assert "12300" == ApaNumber.to_string({123, 2})
     assert "456000" == ApaNumber.to_string({456, 3})
     assert "45600" == ApaNumber.to_string({456, 2})
-    assert "57900" == {123, 2} + {456, 2}
     assert "456001.23" == "1.23" + "456e3"
     assert "456001.23" == "1.23" + "456.0e+003"
+    assert "57900" == {123, 2} + {456, 2}
+    assert "33300" == {456, 2} - {123, 2}
 
     assert "132342342342300000000455987.88" ==
              "132342342342300000000000000" + "456e3" - "0012.1200"

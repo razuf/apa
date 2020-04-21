@@ -94,10 +94,11 @@ defmodule Apa do
     Apa.add(left, right)
   end
 
+  @spec {integer(), integer()} + {integer(), integer()} :: String.t()
   def {left_int, left_dec} + {right_int, right_dec}
       when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
              is_integer(right_dec) do
-    ApaAdd.bc_add({left_int, left_dec}, {right_int, right_dec}, 0)
+    ApaAdd.bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, 0)
   end
 
   def left + right do
@@ -142,6 +143,13 @@ defmodule Apa do
 
   def left - right when is_binary(left) and is_binary(right) do
     Apa.sub(left, right)
+  end
+
+  @spec {integer(), integer()} - {integer(), integer()} :: String.t()
+  def {left_int, left_dec} - {right_int, right_dec}
+      when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
+             is_integer(right_dec) do
+    ApaSub.bc_sub_apa_number({left_int, left_dec}, {right_int, right_dec}, 0)
   end
 
   def left - right do
