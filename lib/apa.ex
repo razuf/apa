@@ -306,7 +306,7 @@ defmodule Apa do
       "42"
 
       iex> Apa.answer("six by", "nine")
-      "42"
+      "Forty two"
 
   """
   def answer("?", "Ultimate Question of Life, the Universe, and Everything") do
