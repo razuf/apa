@@ -80,16 +80,15 @@ defmodule Apa do
 
       iex> Apa.add("1.0e2", "1.1")
       "101.1"
-
-
   """
-  @spec add(String.t(), String.t(), integer) :: String.t()
+  @spec add(String.t(), String.t(), integer()) :: String.t()
   def add(left, right, scale \\ 0)
 
   def add(left, right, scale) do
     ApaAdd.bc_add(left, right, scale)
   end
 
+  @spec String.t() + String.t() :: String.t()
   def left + right when is_binary(left) and is_binary(right) do
     Apa.add(left, right)
   end
@@ -116,6 +115,9 @@ defmodule Apa do
       iex> Apa.sub("2", "3")
       "-1"
 
+      iex> Apa.sub("2", "+3")
+      "-1"
+
       iex> Apa.sub("2", "-3")
       "5"
 
@@ -132,7 +134,6 @@ defmodule Apa do
       this is fixed with APA:
       iex> Apa.sub("3.30000000000000004", "3.30000000000000003")
       "0.00000000000000001"
-
   """
   @spec sub(String.t(), String.t(), integer) :: String.t()
   def sub(left, right, scale \\ 0)
@@ -141,6 +142,7 @@ defmodule Apa do
     ApaSub.bc_sub(left, right, scale)
   end
 
+  @spec String.t() - String.t() :: String.t()
   def left - right when is_binary(left) and is_binary(right) do
     Apa.sub(left, right)
   end
@@ -178,7 +180,6 @@ defmodule Apa do
 
       iex> "1" |> Apa.mul("2") |> Apa.mul("3")
       "6"
-
   """
   @spec mul(String.t(), String.t(), integer) :: String.t()
   def mul(left, right, scale \\ 0)
@@ -187,6 +188,7 @@ defmodule Apa do
     ApaMul.bc_mul(left, right, scale)
   end
 
+  @spec String.t() * String.t() :: String.t()
   def left * right when is_binary(left) and is_binary(right) do
     Apa.mul(left, right)
   end
@@ -229,6 +231,7 @@ defmodule Apa do
     ApaDiv.bc_div(left, right, scale)
   end
 
+  @spec String.t() / String.t() :: String.t()
   def left / right when is_binary(left) and is_binary(right) do
     Apa.div(left, right)
   end
@@ -295,6 +298,7 @@ defmodule Apa do
       -1
 
   """
+  @spec comp(String.t(), String.t()) :: integer()
   def comp(left, right) do
     ApaComp.bc_comp(left, right)
   end
@@ -307,25 +311,26 @@ defmodule Apa do
   ## Examples
 
 
-      iex> Apa.answer("?", "Ultimate Question of Life, the Universe, and Everything")
+      iex> Apa.answer("Ultimate Question of Life, the Universe, and Everything")
       "42"
 
-      iex> Apa.answer("?", "Das Leben, das Universum und der ganze Rest")
+      iex> Apa.answer("Das Leben, das Universum und der ganze Rest")
       "42"
 
-      iex> Apa.answer("six by", "nine")
+      iex> Apa.answer("six by nine")
       "Forty two"
 
   """
-  def answer("?", "Ultimate Question of Life, the Universe, and Everything") do
+  @spec answer(String.t()) :: String.t()
+  def answer("Ultimate Question of Life, the Universe, and Everything") do
     "42"
   end
 
-  def answer("?", "Das Leben, das Universum und der ganze Rest") do
+  def answer("Das Leben, das Universum und der ganze Rest") do
     "42"
   end
 
-  def answer("six by", "nine") do
+  def answer("six by nine") do
     "Forty two"
   end
 end

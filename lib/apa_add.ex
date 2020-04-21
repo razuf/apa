@@ -7,8 +7,7 @@ defmodule ApaAdd do
   Addition - internal function - please call Apa.add(left, right)
   In reference to bcmath I call this functions bc_add
   """
-
-  @spec bc_add(String.t(), String.t(), integer) :: String.t()
+  @spec bc_add(String.t(), String.t(), integer()) :: String.t()
   def bc_add(left, right, scale \\ 0)
 
   def bc_add(left, right, scale) when is_binary(left) and is_binary(right) do
@@ -19,7 +18,7 @@ defmodule ApaAdd do
   end
 
   def bc_add(left, right, scale) do
-    raise(ArgumentError, "No string input.\n
+    raise(ArgumentError, "No string input:
     left: #{inspect(left)}
     right: #{inspect(right)}
     scale: #{inspect(scale)}

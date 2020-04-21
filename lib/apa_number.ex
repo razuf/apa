@@ -5,22 +5,16 @@ defmodule ApaNumber do
   Helper to handle number string inputs
   convert any number string to a tuple of 2 integers:
   {integer_value, exp}
+
+  Maybe better to make parse private and force to use from_string/1 - because of possible inifinite loop
   """
-
-  # Maybe better to make parse private and force to use from_string/1 - because of possible inifinite loop
-
-  @spec parse(binary) :: binary | :error
   defp parse("-" <> binary) do
     "-" <> parse_unsigned(binary)
   end
 
-  defp parse("+" <> binary) do
-    parse_unsigned(binary)
-  end
+  defp parse("+" <> binary), do: parse_unsigned(binary)
 
-  defp parse(binary) do
-    parse_unsigned(binary)
-  end
+  defp parse(binary), do: parse_unsigned(binary)
 
   defp parse_unsigned(<<digit, rest::binary>>) when digit in ?0..?9 do
     parse_unsigned(rest, false, false, <<digit>>)
@@ -144,7 +138,7 @@ defmodule ApaNumber do
     if String.contains?(number_string, ".") do
       [d1, d2] =
         number_string
-        |> clean_float_string()
+        |> String.trim_trailing("0")
         |> String.split(".")
 
       exp = String.length(d2) * -1
@@ -183,6 +177,7 @@ defmodule ApaNumber do
       "-0.003997"
 
   """
+  @spec to_string({integer(), integer()}) :: binary | :error
   def to_string({int_value, exp}) when exp == 0 do
     Kernel.to_string(int_value)
   end
@@ -190,7 +185,9 @@ defmodule ApaNumber do
   def to_string({int_value, exp}) when exp < 0 do
     {d1, d2} =
       Kernel.to_string(int_value)
-      |> clean_abs_int_string()
+      |> String.trim_leading("+")
+      |> String.trim_leading("-")
+      |> String.trim_leading("0")
       |> String.split_at(exp)
 
     sign = sign_of(int_value)
@@ -225,8 +222,16 @@ defmodule ApaNumber do
       iex> ApaNumber.shift_to({2, -1}, -4)
       {2000, -4}
 
+      iex> ApaNumber.shift_to({2000, -1}, 0)
+      {200, 0}
 
+      iex> ApaNumber.shift_to({2000, -4}, -1)
+      {2, -1}
+
+      iex> ApaNumber.shift_to({20, -1}, 0)
+      {2, 0}
   """
+  @spec shift_to({integer(), integer()}, integer()) :: {integer(), integer()}
   def shift_to({int_value, exp}, shift_decimal_point)
       when exp == shift_decimal_point do
     {int_value, exp}
@@ -244,82 +249,89 @@ defmodule ApaNumber do
   end
 
   def shift_to({int_value, exp}, shift_decimal_point) do
-    count_zeros = count_trailing_zeros(int_value)
+    counted_zeros = count_trailing_zeros(int_value)
     diff = shift_decimal_point - exp
 
-    if count_zeros >= diff do
-      new_int = remove_trailing_zeros(int_value, diff)
+    if counted_zeros >= diff do
+      new_int = remove_number_of_zeros(int_value, diff)
       {new_int, shift_decimal_point}
     else
       raise(ArgumentError, "Impossible operation - see doc.")
     end
   end
 
-  defp remove_trailing_zeros(int_value, count_zeros) do
-    int_value
-    |> Kernel.to_string()
-    |> String.codepoints()
-    |> Enum.reverse()
-    |> remove_zeros(count_zeros)
-    |> Enum.reverse()
-    |> Enum.join()
-    |> String.to_integer()
+  @doc """
+  Adds a minus sign to a number string if necessary.
+  Could be done by converting to integer and multiply with -1 and reconvert to string.
+  But this works nice and elegant with strings and pattern matching too.
+
+  ## Examples
+
+      iex> ApaNumber.add_minus_sign("3")
+      "-3"
+
+      iex> ApaNumber.add_minus_sign("+3")
+      "-3"
+
+      iex> ApaNumber.add_minus_sign("-3")
+      "3"
+
+      iex> ApaNumber.add_minus_sign("-0003.0003e-002")
+      "0003.0003e-002"
+
+  """
+  @spec add_minus_sign(binary()) :: binary()
+  def add_minus_sign(<<sign, number_string::binary>>) when sign in '+' do
+    "-" <> number_string
   end
 
-  def fill_up_trailing_zeros(int_value, count_zeros) do
-    int_value
-    |> Kernel.to_string()
-    |> fill_up_string_trailing_zeros(count_zeros)
-    |> String.to_integer()
+  def add_minus_sign(<<sign, number_string::binary>>) when sign in '-' do
+    number_string
   end
 
-  defp remove_zeros(list, 0), do: list
+  def add_minus_sign(number_string) do
+    "-" <> number_string
+  end
 
-  defp remove_zeros([head | tail], acc) do
-    if head == "0" do
-      remove_zeros(tail, acc - 1)
+  defp remove_number_of_zeros(int_value, 0), do: int_value
+
+  defp remove_number_of_zeros(rest_int, acc) do
+    if rem(rest_int, 10) == 0 do
+      remove_number_of_zeros(div(rest_int, 10), acc - 1)
     else
-      raise(ArgumentError, "Not implemeted - wrong usage - see doc.")
+      raise(ArgumentError, "Impossible operation - see doc.")
     end
   end
 
-  defp count_trailing_zeros(int_value) do
-    int_value
-    |> Kernel.to_string()
-    |> String.codepoints()
-    |> Enum.reverse()
-    |> count_zeros()
-  end
+  defp count_trailing_zeros(int_value, acc \\ 0)
 
-  defp count_zeros(list, acc \\ 0)
+  defp count_trailing_zeros(0, acc), do: acc
 
-  defp count_zeros([], acc), do: acc
-
-  defp count_zeros([head | tail], acc) do
-    if head == "0" do
-      count_zeros(tail, acc + 1)
+  defp count_trailing_zeros(rest, acc) do
+    if rem(rest, 10) == 0 do
+      count_trailing_zeros(div(rest, 10), acc + 1)
     else
-      count_zeros([], acc)
+      count_trailing_zeros(0, acc)
     end
   end
 
-  def sign_of(int_value) when int_value < 0 do
+  defp sign_of(int_value) when int_value < 0 do
     "-"
   end
 
-  def sign_of(_int_value) do
+  defp sign_of(_int_value) do
     ""
   end
 
-  def fill_if_empty(int_string) when int_string == <<>> do
+  defp fill_if_empty(int_string) when int_string == <<>> do
     fill_up_string_leading_zeros(int_string, 1)
   end
 
-  def fill_if_empty(int_string) do
+  defp fill_if_empty(int_string) do
     int_string
   end
 
-  def fill_if_needed(int_string, abs_decimal_point) when abs_decimal_point >= 0 do
+  defp fill_if_needed(int_string, abs_decimal_point) when abs_decimal_point >= 0 do
     if String.length(int_string) < abs_decimal_point do
       fill_up_string_leading_zeros(
         int_string,
@@ -330,95 +342,11 @@ defmodule ApaNumber do
     end
   end
 
-  def clean_float_string(float_string) do
-    float_string
-    |> String.trim_trailing("0")
-  end
-
-  def add_minus_sign(number_string) do
-    first_sign = String.first(number_string)
-
-    case first_sign do
-      "+" ->
-        new = number_string |> String.trim_leading("+")
-        "-" <> new
-
-      "-" ->
-        number_string |> String.trim_leading("-")
-
-      _ ->
-        "-" <> number_string
-    end
-  end
-
-  ###### old stuff ####################
-
-  @doc """
-  clean number strings - signs, leading and trailing zeros etc.
-
-  ## Examples
-
-      iex> ApaNumber.clean("0003")
-      "3"
-
-      iex> ApaNumber.clean("+0003")
-      "3"
-
-      iex> ApaNumber.clean("-0003")
-      "3"
-
-      iex> ApaNumber.clean("0000120.1200")
-      "120.12"
-
-  """
-  def clean(number_string) do
-    if String.contains?(number_string, ".") do
-      clean_abs_float_string(number_string)
-    else
-      clean_abs_int_string(number_string)
-    end
-  end
-
-  def clean_abs_int_string(int_string) do
-    int_string
-    |> String.trim_leading("+")
-    |> String.trim_leading("-")
-    |> String.trim_leading("0")
-  end
-
-  def clean_abs_float_string(float_string) do
-    float_string
-    |> String.trim_leading("+")
-    |> String.trim_leading("-")
-    |> String.trim_leading("0")
-    |> String.trim_trailing("0")
-    |> String.trim_trailing(".")
-  end
-
-  def diff_count(calc_string, diff_string) do
-    max(0, String.length(diff_string) - String.length(calc_string))
-  end
-
-  def digits_list_reverse(digits_string) do
-    digits_string
-    |> String.codepoints()
-    |> Enum.reverse()
-  end
-
-  def fill_up_string_leading_zeros(fill_up_string, zeros_count) do
+  defp fill_up_string_leading_zeros(fill_up_string, zeros_count) do
     "#{String.duplicate("0", zeros_count)}#{fill_up_string}"
   end
 
-  def fill_up_string_trailing_zeros(fill_up_string, zeros_count) do
+  defp fill_up_string_trailing_zeros(fill_up_string, zeros_count) do
     "#{fill_up_string}#{String.duplicate("0", zeros_count)}"
-  end
-
-  def remove_leading_zeros(list) when length(list) > 1 do
-    list
-    |> Enum.drop_while(fn x -> x == 0 end)
-  end
-
-  def remove_leading_zeros(list) do
-    list
   end
 end

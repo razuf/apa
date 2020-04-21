@@ -9,12 +9,13 @@ defmodule ApaComp do
   Comparison - internal function - please call Apa.comp(left, right)
   In reference to bcmath I call this functions bc_comp
   """
+  @spec bc_comp(String.t(), String.t()) :: integer()
   def bc_comp(left, right) when is_binary(left) and is_binary(right) do
     compare_with_different_signs(left, right)
   end
 
   def bc_comp(left, right) do
-    raise(ArgumentError, "No string input.\n
+    raise(ArgumentError, "No string input:
     left: #{inspect(left)}
     right: #{inspect(right)}
     ")

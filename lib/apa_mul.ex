@@ -19,7 +19,7 @@ defmodule ApaMul do
   end
 
   def bc_mul(left, right, scale) do
-    raise(ArgumentError, "No string input.\n
+    raise(ArgumentError, "No string input:
     left: #{inspect(left)}
     right: #{inspect(right)}
     scale: #{inspect(scale)}

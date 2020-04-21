@@ -36,6 +36,22 @@ defmodule ApaTest do
     assert Apa.div("6", "2") == "3"
   end
 
+  test "ApaNumber.from_string test" do
+    assert ApaNumber.from_string("3") == {3, 0}
+  end
+
+  test "ApaNumber.to_string test" do
+    assert ApaNumber.to_string({3, 0}) == "3"
+  end
+
+  test "ApaNumber.shift_to test" do
+    assert ApaNumber.shift_to({3, -1}, -2) == {30, -2}
+  end
+
+  test "ApaNumber.add_minus_sign test" do
+    assert ApaNumber.add_minus_sign("3") == "-3"
+  end
+
   test "Apa.add - some random numbers - also with leading and trailing zeros" do
     for _n <- 1..2 do
       left =

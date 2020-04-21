@@ -7,16 +7,15 @@ defmodule ApaSub do
   Subtraction - internal function - please call Apa.sub(left, right)
   In reference to bcmath I call this functions bc_sub
   """
-
+  @spec bc_sub(String.t(), String.t(), integer()) :: String.t()
   def bc_sub(left, right, scale \\ 0)
 
-  @spec bc_sub(String.t(), String.t(), integer) :: String.t()
   def bc_sub(left, right, scale) when is_binary(left) and is_binary(right) do
     Apa.add(left, ApaNumber.add_minus_sign(right), scale)
   end
 
   def bc_sub(left, right, scale) do
-    raise(ArgumentError, "No string input.\n
+    raise(ArgumentError, "No string input:
     left: #{inspect(left)}
     right: #{inspect(right)}
     scale: #{inspect(scale)}
