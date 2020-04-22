@@ -1,6 +1,6 @@
 # Apa
 
-![Elixir CI status](https://github.com/razuf/apa/workflows/Elixir%20CI/badge.svg)&nbsp;[![codecov](https://codecov.io/gh/razuf/apa/branch/master/graph/badge.svg)](https://codecov.io/gh/razuf/apa)&nbsp;[![hex.pm version](https://img.shields.io/hexpm/v/apa.svg)](https://hex.pm/packages/apa)
+![Elixir CI status](https://github.com/razuf/apa/workflows/Elixir%20CI/badge.svg)&nbsp;[![codecov](https://codecov.io/gh/razuf/apa/branch/master/graph/badge.svg)](https://codecov.io/gh/razuf/apa)&nbsp;[![hex.pm version](https://img.shields.io/hexpm/v/apa.svg)](https://hex.pm/packages/apa)&nbsp;[![hexdocs.pm](https://img.shields.io/badge/docs-latest-green.svg?style=flat-square)](https://hexdocs.pm/apa/)
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 
