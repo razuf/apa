@@ -10,7 +10,7 @@ This is especially useful when working with floating-point numbers, as these int
 ## Intention, Pro & Cons
 
 I started this project to learn for myself - so the focus was on learning and have fun!
-You could use it if you like - there are some test coverage - but for production I would recomend the [Decimal](https://github.com/ericmj/decimal) package!
+You could use it if you like - there are some test coverage - but for production I would recommend the [Decimal](https://github.com/ericmj/decimal) package!
 
 
 Some limits and 'bugs' in standard Erlang/Elixir:
