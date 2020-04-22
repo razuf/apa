@@ -2,7 +2,7 @@ defmodule ApaNumber do
   @moduledoc """
   APA : Arbitrary Precision Arithmetic - Number String helper - ApaNumber.
 
-  Helper to handle number string inputs
+  Parser to handle number string inputs
   convert any number string to a tuple of 2 integers:
   {integer_value, exp}
 
@@ -86,42 +86,41 @@ defmodule ApaNumber do
 
   ## Examples
 
-      iex> ApaNumber.from_string("0003")
-      {3, 0}
+    iex> ApaNumber.from_string("0003")
+    {3, 0}
 
-      iex> ApaNumber.from_string("+0003")
-      {3, 0}
+    iex> ApaNumber.from_string("+0003")
+    {3, 0}
 
-      iex> ApaNumber.from_string("-0003")
-      {-3, 0}
+    iex> ApaNumber.from_string("-0003")
+    {-3, 0}
 
-      iex> ApaNumber.from_string("-0000120.1200")
-      {-12012, -2}
+    iex> ApaNumber.from_string("-0000120.1200")
+    {-12012, -2}
 
-      iex> ApaNumber.from_string("-0000120.1200")
-      {-12012, -2}
+    iex> ApaNumber.from_string("-0000120.1200")
+    {-12012, -2}
 
-      iex> ApaNumber.from_string("-03 Euro")
-      {-3, 0}
+    iex> ApaNumber.from_string("-03 Euro")
+    {-3, 0}
 
-      iex> ApaNumber.from_string("-0003e-2")
-      {-3, -2}
+    iex> ApaNumber.from_string("-0003e-2")
+    {-3, -2}
 
-      iex> ApaNumber.from_string("-3e-0002")
-      {-3, -2}
+    iex> ApaNumber.from_string("-3e-0002")
+    {-3, -2}
 
-      iex> ApaNumber.from_string("3e-12")
-      {3, -12}
+    iex> ApaNumber.from_string("3e-12")
+    {3, -12}
 
-      iex> ApaNumber.from_string("+0003e+12")
-      {3000000000000, 0}
+    iex> ApaNumber.from_string("+0003e+12")
+    {3000000000000, 0}
 
-      iex> ApaNumber.from_string("+0003e+00000")
-      {3, 0}
+    iex> ApaNumber.from_string("+0003e+00000")
+    {3, 0}
 
-      iex> ApaNumber.from_string("+0003.00e+00000 Dollar")
-      {3, 0}
-
+    iex> ApaNumber.from_string("+0003.00e+00000 Dollar")
+    {3, 0}
   """
   @spec from_string(binary) :: {integer, integer} | :error
   def from_string(binary) do
@@ -157,25 +156,24 @@ defmodule ApaNumber do
   end
 
   @doc """
-  Create a string from an ApaNumber tuple.
+  Creates a string from an ApaNumber tuple.
 
   ## Examples
 
-      iex> ApaNumber.to_string({3, 0})
-      "3"
+    iex> ApaNumber.to_string({3, 0})
+    "3"
 
-      iex> ApaNumber.to_string({-3, 0})
-      "-3"
+    iex> ApaNumber.to_string({-3, 0})
+    "-3"
 
-      iex> ApaNumber.to_string({3, 3})
-      "3000"
+    iex> ApaNumber.to_string({3, 3})
+    "3000"
 
-      iex> ApaNumber.to_string({-12012, -2})
-      "-120.12"
+    iex> ApaNumber.to_string({-12012, -2})
+    "-120.12"
 
-      iex> ApaNumber.to_string({-3997, -6})
-      "-0.003997"
-
+    iex> ApaNumber.to_string({-3997, -6})
+    "-0.003997"
   """
   @spec to_string({integer(), integer()}) :: binary | :error
   def to_string({int_value, exp}) when exp == 0 do
@@ -207,29 +205,29 @@ defmodule ApaNumber do
   end
 
   @doc """
-  Shift an ApaNumber to another decimal point
+  Shifts an ApaNumber to another decimal point
   to work with the intended integer calculation of two numbers with the same decimal point
   this operation do not change the mathematical value:
   ApaNumber.to_string({2, -1}) == "0.2" ~math-equal~ ApaNumber.to_string({20, -2}) == "0.20"
   and always shift_decimal_point > exp because fillup with zeros
   reduce non existing zeros is not possible and not necessary to implement
-
+  returns the shifted ApaNumber tupel or if not possible to shift the input tupel
   ## Examples
 
-      iex> ApaNumber.shift_to({2, -1}, -2)
-      {20, -2}
+    iex> ApaNumber.shift_to({2, -1}, -2)
+    {20, -2}
 
-      iex> ApaNumber.shift_to({2, -1}, -4)
-      {2000, -4}
+    iex> ApaNumber.shift_to({2, -1}, -4)
+    {2000, -4}
 
-      iex> ApaNumber.shift_to({2000, -1}, 0)
-      {200, 0}
+    iex> ApaNumber.shift_to({2000, -1}, 0)
+    {200, 0}
 
-      iex> ApaNumber.shift_to({2000, -4}, -1)
-      {2, -1}
+    iex> ApaNumber.shift_to({2000, -4}, -1)
+    {2, -1}
 
-      iex> ApaNumber.shift_to({20, -1}, 0)
-      {2, 0}
+    iex> ApaNumber.shift_to({20, -1}, 0)
+    {2, 0}
   """
   @spec shift_to({integer(), integer()}, integer()) :: {integer(), integer()}
   def shift_to({int_value, exp}, shift_decimal_point)
@@ -256,7 +254,8 @@ defmodule ApaNumber do
       new_int = remove_number_of_zeros(int_value, diff)
       {new_int, shift_decimal_point}
     else
-      raise(ArgumentError, "Impossible operation - see doc.")
+      # Impossible operation - return the orig input - see doc
+      {int_value, exp}
     end
   end
 
@@ -267,18 +266,17 @@ defmodule ApaNumber do
 
   ## Examples
 
-      iex> ApaNumber.add_minus_sign("3")
-      "-3"
+    iex> ApaNumber.add_minus_sign("3")
+    "-3"
 
-      iex> ApaNumber.add_minus_sign("+3")
-      "-3"
+    iex> ApaNumber.add_minus_sign("+3")
+    "-3"
 
-      iex> ApaNumber.add_minus_sign("-3")
-      "3"
+    iex> ApaNumber.add_minus_sign("-3")
+    "3"
 
-      iex> ApaNumber.add_minus_sign("-0003.0003e-002")
-      "0003.0003e-002"
-
+    iex> ApaNumber.add_minus_sign("-0003.0003e-002")
+    "0003.0003e-002"
   """
   @spec add_minus_sign(binary()) :: binary()
   def add_minus_sign(<<sign, number_string::binary>>) when sign in '+' do
@@ -298,8 +296,6 @@ defmodule ApaNumber do
   defp remove_number_of_zeros(rest_int, acc) do
     if rem(rest_int, 10) == 0 do
       remove_number_of_zeros(div(rest_int, 10), acc - 1)
-    else
-      raise(ArgumentError, "Impossible operation - see doc.")
     end
   end
 

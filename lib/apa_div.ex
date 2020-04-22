@@ -5,11 +5,8 @@ defmodule ApaDiv do
 
   @doc """
   Division - internal function - please call Apa.div(left, right)
-  In reference to bcmath I call this functions bc_div
+  In reference to bcmath I call this function bc_div
   """
-
-  def bc_div(left, right, scale \\ 30)
-
   @spec bc_div(String.t(), String.t(), integer) :: String.t()
   def bc_div(left, right, scale) when is_binary(left) and is_binary(right) do
     {left_int, left_exp} = ApaNumber.from_string(left)

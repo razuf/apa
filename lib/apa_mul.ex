@@ -5,12 +5,9 @@ defmodule ApaMul do
 
   @doc """
   Multiplication - internal function - please call Apa.mul(left, right)
-  In reference to bcmath I call this functions bc_mul
+  In reference to bcmath I call this function bc_mul
   """
-
-  def bc_mul(left, right, scale \\ 0)
-
-  @spec bc_mul(String.t(), String.t(), integer) :: String.t()
+  @spec bc_mul(String.t(), String.t(), integer) :: String.t() | Exception
   def bc_mul(left, right, scale) when is_binary(left) and is_binary(right) do
     {left_int, left_exp} = ApaNumber.from_string(left)
     {right_int, right_exp} = ApaNumber.from_string(right)

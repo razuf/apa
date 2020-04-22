@@ -5,11 +5,9 @@ defmodule ApaAdd do
 
   @doc """
   Addition - internal function - please call Apa.add(left, right)
-  In reference to bcmath I call this functions bc_add
+  In reference to bcmath I call this function bc_add
   """
   @spec bc_add(String.t(), String.t(), integer()) :: String.t()
-  def bc_add(left, right, scale \\ 0)
-
   def bc_add(left, right, scale) when is_binary(left) and is_binary(right) do
     {left_int, left_dec} = ApaNumber.from_string(left)
     {right_int, right_dec} = ApaNumber.from_string(right)
