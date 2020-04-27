@@ -4,14 +4,21 @@
 
 APA : Arbitrary Precision Arithmetic - pure Elixir implementation.
 
-For arbitrary precision mathematics - which supports numbers of any size and precision up to nearly unlimited of decimals (internal Elixir integer math), represented as strings. Inspired by BCMath/PHP.
-This is especially useful when working with floating-point numbers, as these introduce small but in some case significant rounding errors.
+![Apa](/priv/apa_logo.png)
 
-## Intention, Pro & Cons
+For arbitrary precision mathematics - which supports numbers of any size and precision up to nearly unlimited of decimals (internal Elixir integer math), represented as strings. This is especially useful when working with floating-point numbers, as these introduce small but in some case significant rounding errors.
+
+## Intention, Pros & Cons
 
 I started this project to learn for myself - so the focus was on learning and have fun!
+
 You could use it if you like - there are some test coverage - but for production I would recommend the [Decimal](https://github.com/ericmj/decimal) package!
 
+The basic idea is to work with strings (inspired by BCMath/PHP):
+
+- parse/convert any string into internal ApaNumber - a tuple: {integer_value, exponent}
+- calculate with that tuple
+- reconvert it with **to_string** function
 
 Some limits and 'bugs' in standard Erlang/Elixir:
 
@@ -21,24 +28,28 @@ iex> 0.30000000000000004 - 0.30000000000000003
 ```
 
 with Apa:
+
 ```elixir
 "0.30000000000000004" - "0.30000000000000003"
 "0.00000000000000001"
 ```
 
 Elixir:
+
 ```elixir
 iex> 0.1 + 0.2
 0.30000000000000004
 ```
 
 with Apa:
+
 ```elixir
 "0.1" + "0.2"
 "0.3"
 ```
 
 Elixir:
+
 ```elixir
 iex> 9007199254740992.0 - 9007199254740991.0
 1.0
@@ -116,6 +127,24 @@ cart_total = product.price * cart_quantity
 
 Could be useful with [CubDB](https://github.com/lucaong/cubdb) (pure Elixir key/value database).
 
+## Cons
+
+Slower performance compared to original Elixir integer or float calculation (see raw performance tests).
+
+## Precision and Scale
+
+Some ideas come from Postgres and I extend that to be useful in Elixir:
+
+The 'precision' of an ApaNumber is the total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
+The 'scale' of an ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point
+So the number 123.456 has a precision of 6 and a scale of 3. Integers can be considered to have a scale of 0.
+
+### No explixit precision and no explicit scale
+
+All operations (except the division - see below) without any explicit precision or scale workes up to the implementation limit on elixir integer. An ApaNumber of this kind will not coerce input values to any particular scale.
+
+The division is limited in this case by the default scale value (see config), otherwise there will be very often huge nearly endless strings (f.e. 10/3). If you need any higher precision/scale you could adjust the default value (see config) or use the precision and/or scale parameter for each operation.
+
 ## Features
 
   A list of supported and planned features (maybe incomplete)
@@ -125,7 +154,8 @@ Could be useful with [CubDB](https://github.com/lucaong/cubdb) (pure Elixir key/
   - [x] basic operations (`mul`)
   - [x] basic operations (`div`)
   - [x] comparison (`comp`)
-  - [ ] scale (number of digits after the decimal place in the result)
+  - [ ] precision (total count of significant digits)
+  - [ ] scale (number of digits after the decimal place)
   - [ ] rounding
   - [ ] Infinity and NaN
   - [ ] string format for result
@@ -170,7 +200,6 @@ Could be useful with [CubDB](https://github.com/lucaong/cubdb) (pure Elixir key/
   end
   ```
 
-
 ## Examples
 
 ```elixir
@@ -184,4 +213,5 @@ iex> "333.33" |> Apa.add("666.66") |> Apa.sub("111.11")
 iex> "1" |> Apa.add("2") |> Apa.add("3") |> Apa.sub("4") |> Apa.add("5") |> Apa.mul("6")
 "42"
 ```
+
 :laughing:
