@@ -136,7 +136,7 @@ Slower performance compared to original Elixir integer or float calculation (see
 Some ideas come from Postgres and I extend that to be useful in Elixir:
 
 The 'precision' of an ApaNumber is the total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
-The 'scale' of an ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point
+The 'scale' of an ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point.
 So the number 123.456 has a precision of 6 and a scale of 3. Integers can be considered to have a scale of 0.
 
 ### No explixit precision and no explicit scale
