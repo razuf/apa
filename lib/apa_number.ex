@@ -175,12 +175,14 @@ defmodule ApaNumber do
     iex> ApaNumber.to_string({-3997, -6})
     "-0.003997"
   """
-  @spec to_string({integer(), integer()}) :: binary | :error
-  def to_string({int_value, exp}) when exp == 0 do
-    Kernel.to_string(int_value)
+  @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
+  def to_string(number_tuple, precision \\ 30, scale \\ 30)
+
+  def to_string({int_value, exp}, precision, _scale) when exp == 0 and precision >= 0 do
+    to_string_integer(int_value, String.length(Kernel.to_string(abs(int_value))), precision)
   end
 
-  def to_string({int_value, exp}) when exp < 0 do
+  def to_string({int_value, exp}, _precision, _scale) when exp < 0 do
     {d1, d2} =
       Kernel.to_string(int_value)
       |> String.trim_leading("+")
@@ -195,13 +197,56 @@ defmodule ApaNumber do
     "#{sign}#{d1_filled}.#{d2_filled}"
   end
 
-  def to_string({int_value, exp}) when exp > 0 do
+  def to_string({int_value, exp}, precision, _scale) when exp > 0 and precision == 0 do
     d1_filled =
       int_value
       |> Kernel.to_string()
       |> fill_up_string_trailing_zeros(exp)
 
     "#{d1_filled}"
+  end
+
+  def to_string({int_value, exp}, precision, _scale) when exp > 0 and precision > 0 do
+    abs_int_string = Kernel.to_string(abs(int_value))
+    abs_int_string_length = String.length(abs_int_string)
+
+    if precision <= abs_int_string_length do
+      d1_precision =
+        abs_int_string
+        |> reduce_to_precision(precision)
+        |> fill_up_string_trailing_zeros(abs_int_string_length - precision + exp)
+
+      sign = sign_of(int_value)
+
+      "#{sign}#{d1_precision}"
+    else
+      to_string({int_value, exp}, 0, 0)
+    end
+  end
+
+  ########## to_string_integer
+
+  defp to_string_integer(int_value, length, precision)
+       when length > precision and precision > 0 do
+    {d1, _d2} =
+      Kernel.to_string(int_value)
+      |> String.trim_leading("-")
+      |> String.split_at(precision)
+
+    sign = sign_of(int_value)
+    d1_filled = fill_if_empty(d1)
+    d2_filled = fill_up_string_trailing_zeros("", length - precision)
+
+    "#{sign}#{d1_filled}#{d2_filled}"
+  end
+
+  defp to_string_integer(int_value, _length, _precision) do
+    Kernel.to_string(int_value)
+  end
+
+  defp reduce_to_precision(int_string, precision) do
+    {shrinked, _rest} = String.split_at(int_string, precision)
+    shrinked
   end
 
   @doc """

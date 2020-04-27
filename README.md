@@ -168,7 +168,7 @@ The division is limited in this case by the default scale value (see config), ot
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.3.0"}
+      {:apa, "~> 0.4.0"}
     ]
   end
   ```
