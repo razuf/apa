@@ -175,29 +175,39 @@ defmodule ApaNumber do
     iex> ApaNumber.to_string({-3997, -6})
     "-0.003997"
   """
+
+  # Todo: the default values of precision, scale as config - otherwise the +/2 is always with 30
+
   @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
   def to_string(number_tuple, precision \\ 30, scale \\ 30)
 
-  def to_string({int_value, exp}, precision, _scale) when exp == 0 and precision >= 0 do
-    to_string_integer(int_value, String.length(Kernel.to_string(abs(int_value))), precision)
+  def to_string({int_value, exp}, precision, scale) when exp >= 0 do
+    to_string_integer({int_value, exp}, abs_int_length(int_value), precision, scale)
   end
 
-  def to_string({int_value, exp}, _precision, _scale) when exp < 0 do
-    {d1, d2} =
-      Kernel.to_string(int_value)
-      |> String.trim_leading("+")
-      |> String.trim_leading("-")
-      |> String.trim_leading("0")
-      |> String.split_at(exp)
+  def to_string({int_value, exp}, precision, scale) when exp < 0 do
+    to_string_decimals({int_value, exp}, precision, scale)
+  end
+
+  ########## to_string_integer  exp >= 0
+
+  defp to_string_integer({int_value, exp}, abs_length, precision, _scale)
+       when abs_length >= precision and
+              precision > 0 do
+    {d1, _d2} =
+      int_value
+      |> abs()
+      |> Kernel.to_string()
+      |> String.split_at(precision)
 
     sign = sign_of(int_value)
     d1_filled = fill_if_empty(d1)
-    d2_filled = fill_if_needed(d2, abs(exp))
+    d2_filled = fill_up_string_trailing_zeros("", abs_length - precision + exp)
 
-    "#{sign}#{d1_filled}.#{d2_filled}"
+    "#{sign}#{d1_filled}#{d2_filled}"
   end
 
-  def to_string({int_value, exp}, precision, _scale) when exp > 0 and precision == 0 do
+  defp to_string_integer({int_value, exp}, _abs_length, _precision, _scale) do
     d1_filled =
       int_value
       |> Kernel.to_string()
@@ -206,47 +216,74 @@ defmodule ApaNumber do
     "#{d1_filled}"
   end
 
-  def to_string({int_value, exp}, precision, _scale) when exp > 0 and precision > 0 do
-    abs_int_string = Kernel.to_string(abs(int_value))
-    abs_int_string_length = String.length(abs_int_string)
+  ########## to_string_decimals  exp < 0
 
-    if precision <= abs_int_string_length do
-      d1_precision =
-        abs_int_string
-        |> reduce_to_precision(precision)
-        |> fill_up_string_trailing_zeros(abs_int_string_length - precision + exp)
+  defp to_string_decimals({int_value, exp}, precision, scale)
+       when scale == 0 do
+    {d1, _d2} = int_abs_string_split(int_value, exp, precision, scale)
+    sign = sign_of(int_value)
+    d1_filled = fill_if_empty(d1)
 
-      sign = sign_of(int_value)
+    "#{sign}#{d1_filled}"
+  end
 
-      "#{sign}#{d1_precision}"
+  defp to_string_decimals({int_value, exp}, precision, scale) do
+    {d1, d2} = int_abs_string_split(int_value, exp, precision, scale)
+    sign = sign_of(int_value)
+    d1_filled = fill_if_empty(d1)
+    d2_filled = fill_if_needed(d2, abs(exp))
+
+    "#{sign}#{d1_filled}.#{d2_filled}"
+  end
+
+  ### helper
+
+  defp int_abs_string_split(int_value, split_point, precision, scale) do
+    to_string_integer({int_value, 0}, abs_int_length(int_value), precision, scale)
+    |> String.trim_leading("-")
+    |> String.split_at(split_point)
+  end
+
+  defp abs_int_length(int_value) do
+    int_value
+    |> abs()
+    |> Kernel.to_string()
+    |> String.length()
+  end
+
+  defp sign_of(int_value) when int_value < 0 do
+    "-"
+  end
+
+  defp sign_of(_int_value) do
+    ""
+  end
+
+  defp fill_if_empty(int_string) when int_string == <<>> do
+    fill_up_string_leading_zeros("", 1)
+  end
+
+  defp fill_if_empty(int_string) do
+    int_string
+  end
+
+  defp fill_if_needed(abs_int_string, abs_decimal_point) when abs_decimal_point >= 0 do
+    if String.length(abs_int_string) < abs_decimal_point do
+      fill_up_string_leading_zeros(
+        abs_int_string,
+        abs_decimal_point - String.length(abs_int_string)
+      )
     else
-      to_string({int_value, exp}, 0, 0)
+      abs_int_string
     end
   end
 
-  ########## to_string_integer
-
-  defp to_string_integer(int_value, length, precision)
-       when length > precision and precision > 0 do
-    {d1, _d2} =
-      Kernel.to_string(int_value)
-      |> String.trim_leading("-")
-      |> String.split_at(precision)
-
-    sign = sign_of(int_value)
-    d1_filled = fill_if_empty(d1)
-    d2_filled = fill_up_string_trailing_zeros("", length - precision)
-
-    "#{sign}#{d1_filled}#{d2_filled}"
+  defp fill_up_string_leading_zeros(fill_up_string, zeros_count) do
+    "#{String.duplicate("0", zeros_count)}#{fill_up_string}"
   end
 
-  defp to_string_integer(int_value, _length, _precision) do
-    Kernel.to_string(int_value)
-  end
-
-  defp reduce_to_precision(int_string, precision) do
-    {shrinked, _rest} = String.split_at(int_string, precision)
-    shrinked
+  defp fill_up_string_trailing_zeros(fill_up_string, zeros_count) do
+    "#{fill_up_string}#{String.duplicate("0", zeros_count)}"
   end
 
   @doc """
@@ -304,6 +341,28 @@ defmodule ApaNumber do
     end
   end
 
+  ### helper
+
+  defp count_trailing_zeros(int_value, acc \\ 0)
+
+  defp count_trailing_zeros(0, acc), do: acc
+
+  defp count_trailing_zeros(rest, acc) do
+    if rem(rest, 10) == 0 do
+      count_trailing_zeros(div(rest, 10), acc + 1)
+    else
+      count_trailing_zeros(0, acc)
+    end
+  end
+
+  defp remove_number_of_zeros(int_value, 0), do: int_value
+
+  defp remove_number_of_zeros(rest_int, acc) do
+    if rem(rest_int, 10) == 0 do
+      remove_number_of_zeros(div(rest_int, 10), acc - 1)
+    end
+  end
+
   @doc """
   Adds a minus sign to a number string if necessary.
   Could be done by converting to integer and multiply with -1 and reconvert to string.
@@ -334,60 +393,5 @@ defmodule ApaNumber do
 
   def add_minus_sign(number_string) do
     "-" <> number_string
-  end
-
-  defp remove_number_of_zeros(int_value, 0), do: int_value
-
-  defp remove_number_of_zeros(rest_int, acc) do
-    if rem(rest_int, 10) == 0 do
-      remove_number_of_zeros(div(rest_int, 10), acc - 1)
-    end
-  end
-
-  defp count_trailing_zeros(int_value, acc \\ 0)
-
-  defp count_trailing_zeros(0, acc), do: acc
-
-  defp count_trailing_zeros(rest, acc) do
-    if rem(rest, 10) == 0 do
-      count_trailing_zeros(div(rest, 10), acc + 1)
-    else
-      count_trailing_zeros(0, acc)
-    end
-  end
-
-  defp sign_of(int_value) when int_value < 0 do
-    "-"
-  end
-
-  defp sign_of(_int_value) do
-    ""
-  end
-
-  defp fill_if_empty(int_string) when int_string == <<>> do
-    fill_up_string_leading_zeros(int_string, 1)
-  end
-
-  defp fill_if_empty(int_string) do
-    int_string
-  end
-
-  defp fill_if_needed(int_string, abs_decimal_point) when abs_decimal_point >= 0 do
-    if String.length(int_string) < abs_decimal_point do
-      fill_up_string_leading_zeros(
-        int_string,
-        abs_decimal_point - String.length(int_string)
-      )
-    else
-      int_string
-    end
-  end
-
-  defp fill_up_string_leading_zeros(fill_up_string, zeros_count) do
-    "#{String.duplicate("0", zeros_count)}#{fill_up_string}"
-  end
-
-  defp fill_up_string_trailing_zeros(fill_up_string, zeros_count) do
-    "#{fill_up_string}#{String.duplicate("0", zeros_count)}"
   end
 end

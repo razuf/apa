@@ -145,6 +145,26 @@ All operations (except the division - see below) without any explicit precision 
 
 The division is limited in this case by the default scale value (see config), otherwise there will be very often huge nearly endless strings (f.e. 10/3). If you need any higher precision/scale you could adjust the default value (see config) or use the precision and/or scale parameter for each operation.
 
+### Explixit precision and/or explicit scale
+
+Both the precision and the scale of an ApaNumber can be configured as maximum values.
+That means ApaNumbers with a declared precision and/or scale will coerce input values to that precision/scale.
+The precision must be positive, the scale zero or positive.
+
+```elixir
+iex> Apa.add("0.1", "0.2", 6, 3)
+"0.300"
+
+iex> Apa.add("1001", "2002", 3, 0)
+"3000"
+
+because of:
+iex> ApaNumber.to_string({3003, 0}, 3, 0)
+"3000"
+```
+
+If the number of digits to the left of the decimal point exceeds the declared precision minus the declared scale, an error is raised.
+
 ## Features
 
   A list of supported and planned features (maybe incomplete)
@@ -154,7 +174,7 @@ The division is limited in this case by the default scale value (see config), ot
   - [x] basic operations (`mul`)
   - [x] basic operations (`div`)
   - [x] comparison (`comp`)
-  - [ ] precision (total count of significant digits)
+  - [x] precision (total count of significant digits)
   - [ ] scale (number of digits after the decimal place)
   - [ ] rounding
   - [ ] Infinity and NaN

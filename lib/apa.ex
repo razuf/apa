@@ -11,6 +11,9 @@ defmodule Apa do
   You could use it if you like - there are some test coverage -
   but for production I would recomend the Decimal (https://github.com/ericmj/decimal) package!
 
+  The 'precision' of a ApaNumber is the total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
+  The 'scale' of a ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point
+
   You are welcome to read the code and if you find something that could be done better, please let me know.
   """
 
@@ -81,11 +84,12 @@ defmodule Apa do
     iex> Apa.add("1.0e2", "1.1")
     "101.1"
   """
-  @spec add(String.t(), String.t(), integer()) :: String.t()
-  def add(left, right, scale \\ 0)
+  # Todo: precision, scale as config - otherwise the +/2 is always with 30
+  @spec add(String.t(), String.t(), integer(), integer()) :: String.t()
+  def add(left, right, precision \\ 30, scale \\ 30)
 
-  def add(left, right, scale) do
-    ApaAdd.bc_add(left, right, scale)
+  def add(left, right, precision, scale) do
+    ApaAdd.bc_add(left, right, precision, scale)
   end
 
   @spec String.t() + String.t() :: String.t()
@@ -93,11 +97,12 @@ defmodule Apa do
     Apa.add(left, right)
   end
 
+  # Todo: precision, scale default values from config here
   @spec {integer(), integer()} + {integer(), integer()} :: String.t()
   def {left_int, left_dec} + {right_int, right_dec}
       when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
              is_integer(right_dec) do
-    ApaAdd.bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, 0)
+    ApaAdd.bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, 30, 30)
   end
 
   def left + right do
@@ -135,11 +140,11 @@ defmodule Apa do
     iex> Apa.sub("3.30000000000000004", "3.30000000000000003")
     "0.00000000000000001"
   """
-  @spec sub(String.t(), String.t(), integer) :: String.t()
-  def sub(left, right, scale \\ 0)
+  @spec sub(String.t(), String.t(), integer(), integer()) :: String.t()
+  def sub(left, right, precision \\ 30, scale \\ 30)
 
-  def sub(left, right, scale) do
-    ApaSub.bc_sub(left, right, scale)
+  def sub(left, right, precision, scale) do
+    ApaSub.bc_sub(left, right, precision, scale)
   end
 
   @spec String.t() - String.t() :: String.t()
@@ -149,9 +154,11 @@ defmodule Apa do
 
   @spec {integer(), integer()} - {integer(), integer()} :: String.t()
   def {left_int, left_dec} - {right_int, right_dec}
-      when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
-             is_integer(right_dec) do
-    ApaSub.bc_sub_apa_number({left_int, left_dec}, {right_int, right_dec}, 0)
+      when is_integer(left_int)
+      when is_integer(left_dec)
+      when is_integer(right_int)
+      when is_integer(right_dec) do
+    ApaSub.bc_sub_apa_number({left_int, left_dec}, {right_int, right_dec}, 30, 30)
   end
 
   def left - right do
@@ -181,11 +188,11 @@ defmodule Apa do
     iex> "1" |> Apa.mul("2") |> Apa.mul("3")
     "6"
   """
-  @spec mul(String.t(), String.t(), integer) :: String.t()
-  def mul(left, right, scale \\ 0)
+  @spec mul(String.t(), String.t(), integer(), integer()) :: String.t()
+  def mul(left, right, precision \\ 30, scale \\ 30)
 
-  def mul(left, right, scale) do
-    ApaMul.bc_mul(left, right, scale)
+  def mul(left, right, precision, scale) do
+    ApaMul.bc_mul(left, right, precision, scale)
   end
 
   @spec String.t() * String.t() :: String.t()
@@ -227,11 +234,11 @@ defmodule Apa do
     iex> Apa.div("222.2001", "2222.001")
     "0.1"
   """
-  @spec div(String.t(), String.t(), integer) :: String.t()
-  def div(left, right, scale \\ 30)
+  @spec div(String.t(), String.t(), integer(), integer()) :: String.t()
+  def div(left, right, precision \\ 30, scale \\ 30)
 
-  def div(left, right, scale) do
-    ApaDiv.bc_div(left, right, scale)
+  def div(left, right, precision, scale) do
+    ApaDiv.bc_div(left, right, precision, scale)
   end
 
   @spec String.t() / String.t() :: String.t()
@@ -251,6 +258,7 @@ defmodule Apa do
 
   left - the left operand, as a string.
   right - the right operand, as a string.
+  TODO: precision, scale
   scale - the optional scale parameter is used to set the number of digits after the decimal place which will be used in the comparison.
 
   Returns:
@@ -300,10 +308,18 @@ defmodule Apa do
 
     iex> Apa.comp("1.0", "1.1")
     -1
+
+    iex> Apa.comp("1.0", "1.1", 0, 1)
+    -1
+
+    iex> Apa.comp("1.0", "1.1", 0, 0)
+    0
   """
-  @spec comp(String.t(), String.t()) :: integer()
-  def comp(left, right) do
-    ApaComp.bc_comp(left, right)
+  @spec comp(String.t(), String.t(), integer(), integer()) :: integer() | Exception
+  def comp(left, right, precision \\ 30, scale \\ 30)
+
+  def comp(left, right, precision, scale) do
+    ApaComp.bc_comp(left, right, precision, scale)
   end
 
   @doc """
@@ -320,7 +336,7 @@ defmodule Apa do
     "42"
 
     iex> Apa.answer("six by nine")
-    "Forty two"
+    "forty two"
   """
   @spec answer(String.t()) :: String.t()
   def answer("Ultimate Question of Life, the Universe, and Everything") do
@@ -332,6 +348,6 @@ defmodule Apa do
   end
 
   def answer("six by nine") do
-    "Forty two"
+    "forty two"
   end
 end
