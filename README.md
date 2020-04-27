@@ -188,7 +188,7 @@ If the number of digits to the left of the decimal point exceeds the declared pr
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.4.0"}
+      {:apa, "~> 0.4.2"}
     ]
   end
   ```

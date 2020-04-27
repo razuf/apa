@@ -7,8 +7,8 @@ defmodule Apa.MixProject do
   def project do
     [
       app: :apa,
-      version: "0.4.1",
-      elixir: "~> 1.10.3",
+      version: "0.4.2",
+      elixir: "~> 1.10",
       deps: deps(),
       name: "Apa",
       source_url: "https://github.com/razuf/apa",
