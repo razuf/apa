@@ -76,7 +76,7 @@ On a short research I found the existing lib EAPA have some limits and disadvant
 a) Customized precision up to 126 decimal places (current realization)
 Why only 126 decimal places? Apa should not have that limit!
 
-b) EAPA is a NIF extension written on Rust -> performance fine, but bad in case of dependencies f.e. for [Nerves](https://www.nerves-project.org/).
+b) EAPA is a NIF extension written on Rust -> performance fine, but bad in case of strong dependencies.
 Apa is in pure Elixir with no dependency - running on any [Nerves device](https://hexdocs.pm/nerves/targets.html/).
 
 Later I found [Decimal](https://github.com/ericmj/decimal) which looks very nice and useful (written by Eric Meadows-Jönsson!) - so there is already a solution - nice, stable and full featured!
@@ -125,7 +125,7 @@ end
 cart_total = product.price * cart_quantity
 ```
 
-Could be useful with [CubDB](https://github.com/lucaong/cubdb) (pure Elixir key/value database).
+Could be useful together with [CubDB](https://github.com/lucaong/cubdb) (pure Elixir key/value database) f.e. in a [Nerves environment](https://www.nerves-project.org/).
 
 ## Cons
 
@@ -137,33 +137,35 @@ Some ideas come from Postgres and I extend that to be useful in Elixir:
 
 The 'precision' of an ApaNumber is the total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
 The 'scale' of an ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point.
-So the number 123.456 has a precision of 6 and a scale of 3. Integers can be considered to have a scale of 0.
+So the number 123.456 has a precision of 6 and a scale of 3. A scale of 0 will effect as Integer.
 
-### No explixit precision and no explicit scale
+scale < 0 f.e. (-1) - no touch on decimal point, when it is there or not - with a limit of 321 if its unlimited/periodic flow of numbers like 10/3 = 0.333333 - if you want more precise value after the decimal point you can overwrite it with an explicit value for scale
+scale == 0 - always integer -> 1.1 will be 1
+scale > 0 - always make a decimal point at scale behind the result -> 1 with scale of 3 will be 1.000
 
-All operations (except the division - see below) without any explicit precision or scale workes up to the implementation limit on elixir integer. An ApaNumber of this kind will not coerce input values to any particular scale.
+precision <= 0 - means no touch at the precision - arbitrary precision as possible maybe limited by scale
+precision > 0 - the total count of significant digits in the whole number - if the precision is less then the real significant digits it will be replaced by 0 without rounding: 123.456 with a precision of 5 will be returned as 123.450
 
-The division is limited in this case by the default scale value (see config), otherwise there will be very often huge nearly endless strings (f.e. 10/3). If you need any higher precision/scale you could adjust the default value (see config) or use the precision and/or scale parameter for each operation.
+### No explicit precision and no explicit scale
 
-### Explixit precision and/or explicit scale
+All operations (except the division - see below) without any explicit precision or scale works up to the implementation limit on elixir integer. An ApaNumber of this kind will not coerce input values to any particular scale. Implemented with default value of precision -1 and default value of scale -1. These defaults can be overwritten via config.
+
+The division is limited in this case by the default scale value (see config), otherwise there will be very often huge nearly endless strings (f.e. 10/3 = 0.3333...). If you need any higher precision/scale you could adjust the default value (via config) or use the precision and/or scale parameter for each operation.
+
+
+### Explicit precision and/or explicit scale
 
 Both the precision and the scale of an ApaNumber can be configured as maximum values.
 That means ApaNumbers with a declared precision and/or scale will coerce input values to that precision/scale.
 The precision must be positive, the scale zero or positive.
 
 ```elixir
-iex> Apa.add("0.1", "0.2", 6, 3)
+iex> Apa.add("0.1", "0.2", -1, 3)
 "0.300"
 
-iex> Apa.add("1001", "2002", 3, 0)
-"3000"
-
-because of:
-iex> ApaNumber.to_string({3003, 0}, 3, 0)
+iex> Apa.add("1001", "2002", 3, -1)
 "3000"
 ```
-
-If the number of digits to the left of the decimal point exceeds the declared precision minus the declared scale, an error is raised.
 
 ## Features
 
@@ -175,7 +177,7 @@ If the number of digits to the left of the decimal point exceeds the declared pr
   - [x] basic operations (`div`)
   - [x] comparison (`comp`)
   - [x] precision (total count of significant digits)
-  - [ ] scale (number of digits after the decimal place)
+  - [x] scale (number of digits after the decimal place)
   - [ ] rounding
   - [ ] Infinity and NaN
   - [ ] string format for result
@@ -188,7 +190,7 @@ If the number of digits to the left of the decimal point exceeds the declared pr
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.4.2"}
+      {:apa, "~> 0.5.0"}
     ]
   end
   ```

@@ -175,11 +175,8 @@ defmodule ApaNumber do
     iex> ApaNumber.to_string({-3997, -6})
     "-0.003997"
   """
-
-  # Todo: the default values of precision, scale as config - otherwise the +/2 is always with 30
-
   @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
-  def to_string(number_tuple, precision \\ 30, scale \\ 30)
+  def to_string(number_tuple, precision \\ -1, scale \\ -1)
 
   def to_string({int_value, exp}, precision, scale) when exp >= 0 do
     to_string_integer({int_value, exp}, abs_int_length(int_value), precision, scale)
@@ -190,6 +187,10 @@ defmodule ApaNumber do
   end
 
   ########## to_string_integer  exp >= 0
+  defp to_string_integer({int_value, exp}, abs_length, precision, scale) when scale > 0 do
+    int_string = to_string_integer({int_value, exp}, abs_length, precision, 0)
+    scaling_integer(int_string, scale)
+  end
 
   defp to_string_integer({int_value, exp}, abs_length, precision, _scale)
        when abs_length >= precision and
@@ -218,8 +219,7 @@ defmodule ApaNumber do
 
   ########## to_string_decimals  exp < 0
 
-  defp to_string_decimals({int_value, exp}, precision, scale)
-       when scale == 0 do
+  defp to_string_decimals({int_value, exp}, precision, scale) when scale == 0 do
     {d1, _d2} = int_abs_string_split(int_value, exp, precision, scale)
     sign = sign_of(int_value)
     d1_filled = fill_if_empty(d1)
@@ -227,19 +227,41 @@ defmodule ApaNumber do
     "#{sign}#{d1_filled}"
   end
 
-  defp to_string_decimals({int_value, exp}, precision, scale) do
+  defp to_string_decimals({int_value, exp}, precision, scale) when scale < 0 do
     {d1, d2} = int_abs_string_split(int_value, exp, precision, scale)
     sign = sign_of(int_value)
     d1_filled = fill_if_empty(d1)
-    d2_filled = fill_if_needed(d2, abs(exp))
+
+    abs_int_string_length = String.length(d2)
+    d2_filled = fill_leading(d2, abs_int_string_length, abs(exp))
 
     "#{sign}#{d1_filled}.#{d2_filled}"
   end
 
+  defp to_string_decimals({int_value, exp}, precision, scale) do
+    {d1, d2} = int_abs_string_split(int_value, exp, precision, scale)
+    sign = sign_of(int_value)
+    d1_filled = fill_if_empty(d1)
+
+    abs_int_string_length = String.length(d2)
+    d2_filled = fill_leading(d2, abs_int_string_length, abs(exp))
+    # Todo: rounding here
+    d2_filled_length = String.length(d2_filled)
+    d2_scaled = scaling(d2_filled, d2_filled_length, scale)
+
+    "#{sign}#{d1_filled}.#{d2_scaled}"
+  end
+
   ### helper
 
-  defp int_abs_string_split(int_value, split_point, precision, scale) do
-    to_string_integer({int_value, 0}, abs_int_length(int_value), precision, scale)
+  defp scaling_integer(int_string, scale) do
+    scale_zeros = String.duplicate("0", scale)
+
+    "#{int_string}.#{scale_zeros}"
+  end
+
+  defp int_abs_string_split(int_value, split_point, precision, _scale) do
+    to_string_integer({int_value, 0}, abs_int_length(int_value), precision, 0)
     |> String.trim_leading("-")
     |> String.split_at(split_point)
   end
@@ -267,15 +289,38 @@ defmodule ApaNumber do
     int_string
   end
 
-  defp fill_if_needed(abs_int_string, abs_decimal_point) when abs_decimal_point >= 0 do
-    if String.length(abs_int_string) < abs_decimal_point do
-      fill_up_string_leading_zeros(
-        abs_int_string,
-        abs_decimal_point - String.length(abs_int_string)
-      )
-    else
-      abs_int_string
-    end
+  # abs_decimal_point > 0
+
+  defp fill_leading(abs_int_string, abs_int_string_length, abs_decimal_point)
+       when abs_int_string_length < abs_decimal_point do
+    fill_up_string_leading_zeros(
+      abs_int_string,
+      abs_decimal_point - abs_int_string_length
+    )
+  end
+
+  defp fill_leading(
+         abs_int_string,
+         _abs_int_string_length,
+         _abs_decimal_point
+       ) do
+    abs_int_string
+  end
+
+  defp scaling(int_string, int_string_length, scale)
+       when int_string_length < scale do
+    fill_up_string_trailing_zeros(int_string, scale - int_string_length)
+  end
+
+  defp scaling(int_string, int_string_length, scale)
+       when int_string_length > scale do
+    int_string
+    |> String.slice(0, scale)
+  end
+
+  defp scaling(int_string, int_string_length, scale)
+       when int_string_length == scale do
+    int_string
   end
 
   defp fill_up_string_leading_zeros(fill_up_string, zeros_count) do

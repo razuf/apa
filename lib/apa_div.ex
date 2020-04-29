@@ -3,6 +3,8 @@ defmodule ApaDiv do
   APA : Arbitrary Precision Arithmetic - Division - ApaDiv.
   """
 
+  @scale_limit 321
+
   @doc """
   Division - internal function - please call Apa.div(left, right)
   In reference to bcmath I call this function bc_div
@@ -51,6 +53,11 @@ defmodule ApaDiv do
         _acc
       )
       when rem == 0 do
+    ApaNumber.to_string({div(left_int, right_int), left_exp - right_exp}, precision, scale)
+  end
+
+  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale, _rem, acc)
+      when scale == -1 and acc == @scale_limit do
     ApaNumber.to_string({div(left_int, right_int), left_exp - right_exp}, precision, scale)
   end
 

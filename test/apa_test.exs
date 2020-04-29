@@ -271,18 +271,22 @@ defmodule ApaTest do
     assert "33300" == {456, 2} - {123, 2}
 
     assert 56_088 == 456 * 123
+
     assert 3.707317073170732 == 456 / 123
 
     assert "132342342342300000000455987.88" ==
              "132342342342300000000000000" + "456e3" - "0012.1200"
 
     assert "48.884" == "2.2" * "22.22"
+
     assert "4444444444.4444444444444" == "0.00000000002" * "222222222222222222222.22"
     assert "-48.884" == "0002.20000000" * "-00022.22000000"
     assert "222.2001" == "0.1" * "2222.001"
 
     assert "10" == "2222.001" / "222.2001"
-    assert "4.803996494145874505235775423" == "17.123" / "3.564324"
+
+    assert "4.803996494145874505235775423334130118361854870657100757394670069275408183992252107271953952558746062366945316980162297254682795391215837841902139087243471693370187446483540777998857567381640950710429242683886201142208171872141814268287619195112453301102817813419879898684855809965648465178810904957012886595045792694491" ==
+             "17.123" / "3.564324"
 
     price = "3.51 Euro"
     quantity = "12"
@@ -303,22 +307,32 @@ defmodule ApaTest do
     assert "123" == ApaNumber.to_string({12_345, -2}, 0, 0)
     assert "123" == ApaNumber.to_string({12_345, -2}, 3, 0)
     assert "120" == ApaNumber.to_string({12_345, -2}, 2, 0)
-    assert "123.00" == ApaNumber.to_string({12_345, -2}, 3, 30)
-    assert "123.40" == ApaNumber.to_string({12_345, -2}, 4, 30)
-    assert "0.012340" == ApaNumber.to_string({12_345, -6}, 4, 30)
-    assert "0.012345000" == ApaNumber.to_string({12_345_000, -9}, 5, 30)
-    assert "-0.012345000" == ApaNumber.to_string({-12_345_000, -9}, 5, 30)
 
-    assert "100000" == ApaNumber.to_string({123, 3}, 1, 30)
+    assert "123" == ApaNumber.to_string({12_345, -2}, 0, 0)
+    assert "123" == ApaNumber.to_string({12_345, -2}, 3, 0)
+    assert "120" == ApaNumber.to_string({12_345, -2}, 2, 0)
 
-    assert "100" == ApaNumber.to_string({123, 0}, 1, 30)
-    assert "1.23" == ApaNumber.to_string({123, -2}, -1, 30)
+    assert "100" == ApaNumber.to_string({123, 0}, 1, 0)
+    assert "1.23" == ApaNumber.to_string({123, -2}, -1, 2)
+
+    assert "1.2300" == ApaNumber.to_string({123, -2}, 30, 4)
+
+    assert "123.45" == ApaNumber.to_string({12_345, -2}, -1, -1)
+    assert "123.0" == ApaNumber.to_string({12_345, -2}, 3, 1)
+    assert "120.00" == ApaNumber.to_string({12_345, -2}, 2, -1)
+
+    assert "100000.000" == ApaNumber.to_string({123, 3}, 1, 3)
+
+    assert "100" == ApaNumber.to_string({123, 0}, 1, 0)
+    assert "1.23" == ApaNumber.to_string({123, -2}, -1, 2)
 
     assert "55" == Apa.add("12.34", "43.21", 2, 0)
-    assert "50.00" == Apa.add("12.34", "43.21", 1, 30)
-    assert "55.55" == Apa.add("12.34", "43.21", 4, 30)
-    assert "55.55" == Apa.add("12.34", "43.21", 30, 30)
-    assert "-55.55" == Apa.add("-12.34", "-43.21", 30, 30)
+    assert "50.00" == Apa.add("12.34", "43.21", 1, 2)
+    assert "55.55" == Apa.add("12.34", "43.21", 4, 2)
+    assert "55.55" == Apa.add("12.34", "43.21", 30, 2)
+    assert "-55.55" == Apa.add("-12.34", "-43.21", -1, 2)
+
+    assert "-3.33" == Apa.div("-10", "3", -1, 2)
   end
 
   # private helper
