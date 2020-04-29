@@ -139,9 +139,9 @@ The 'precision' of an ApaNumber is the total count of significant digits in the 
 The 'scale' of an ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point.
 So the number 123.456 has a precision of 6 and a scale of 3. A scale of 0 will effect as Integer.
 
-scale < 0 f.e. (-1) - no touch on decimal point, when it is there or not - with a limit of 321 if its unlimited/periodic flow of numbers like 10/3 = 0.333333 - if you want more precise value after the decimal point you can overwrite it with an explicit value for scale
-scale == 0 - always integer -> 1.1 will be 1
-scale > 0 - always make a decimal point at scale behind the result -> 1 with scale of 3 will be 1.000
+scale < 0 (default -1) - no touch on decimal point, when it is there or not - with a limit of 321 if its unlimited/periodic flow of numbers like 10/3 = 0.333333... - if you want more digits after the decimal point you can overwrite it with an explicit value for scale > 0 see below
+scale == 0 - always integer -> "1.1" with a scale of 0 will be "1"
+scale > 0 - always make a decimal point with the amount of scale  -> "1" with scale of 3 will be "1.000"
 
 precision <= 0 - means no touch at the precision - arbitrary precision as possible maybe limited by scale
 precision > 0 - the total count of significant digits in the whole number - if the precision is less then the real significant digits it will be replaced by 0 without rounding: 123.456 with a precision of 5 will be returned as 123.450
@@ -152,6 +152,17 @@ All operations (except the division - see below) without any explicit precision 
 
 The division is limited in this case by the default scale value (see config), otherwise there will be very often huge nearly endless strings (f.e. 10/3 = 0.3333...). If you need any higher precision/scale you could adjust the default value (via config) or use the precision and/or scale parameter for each operation.
 
+```elixir
+iex> Apa.add("0.12", "0.34")
+"0.46"
+
+iex> Apa.div("10", "3")
+"3.333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333"
+
+otherwise:
+iex> Apa.div("10", "3", -1, 12)
+"3.333333333333"
+```
 
 ### Explicit precision and/or explicit scale
 
@@ -165,8 +176,37 @@ iex> Apa.add("0.1", "0.2", -1, 3)
 
 iex> Apa.add("1001", "2002", 3, -1)
 "3000"
+
+iex> Apa.add("12.34", "43.21", 4, 2)
+"55.55"
+
+iex> Apa.add("12.34", "43.21", 3, 2)
+"55.50"
+
+iex> Apa.add("12.34", "43.21", 3, 0)
+"55"
+
+iex> Apa.mul("3.50 Euro", "12 Stück", -1, 2)
+"42.00"
 ```
 
+## Config
+
+default values for precision and scale
+
+```elixir
+# Configures the apa precision and scale defaults
+# scale < 0 (default -1) - no touch on decimal point
+# scale == 0 - always integer
+# scale > 0 - always make a decimal point at scale
+# precision <= 0 - (default -1) - no touch at the precision == arbitrary precision
+# precision > 0 - the total count of significant digits in the whole number
+# you can overwrite the defaults with the  following or ues explicit precision and/or scale
+config :apa,
+  precision_default: -1,
+  scale_default: -1
+  ```
+  
 ## Features
 
   A list of supported and planned features (maybe incomplete)
@@ -178,6 +218,7 @@ iex> Apa.add("1001", "2002", 3, -1)
   - [x] comparison (`comp`)
   - [x] precision (total count of significant digits)
   - [x] scale (number of digits after the decimal place)
+  - [x] config for precision and scale defaults
   - [ ] rounding
   - [ ] Infinity and NaN
   - [ ] string format for result

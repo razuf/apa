@@ -3,6 +3,7 @@ defmodule ApaDiv do
   APA : Arbitrary Precision Arithmetic - Division - ApaDiv.
   """
 
+  # only used in division when the loop could be inifinite
   @scale_limit 321
 
   @doc """
@@ -30,7 +31,8 @@ defmodule ApaDiv do
           String.t()
   def bc_div_apa_number({_left_int, _left_exp}, {right_int, _right_exp}, _precision, _scale)
       when right_int == 0 do
-    raise(ArgumentError, "Impossible operation - divisor == 0 - see doc.")
+    # Todo: handling the NaN in ApaNumber and overall
+    "NaN"
   end
 
   def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale) do

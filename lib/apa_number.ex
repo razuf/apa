@@ -5,9 +5,10 @@ defmodule ApaNumber do
   Parser to handle number string inputs
   convert any number string to a tuple of 2 integers:
   {integer_value, exp}
-
-  Maybe better to make parse private and force to use from_string/1 - because of possible inifinite loop
   """
+  @precision_default Application.get_env(:apa, :precision_default, -1)
+  @scale_default Application.get_env(:apa, :scale_default, -1)
+
   defp parse("-" <> binary) do
     "-" <> parse_unsigned(binary)
   end
@@ -176,7 +177,7 @@ defmodule ApaNumber do
     "-0.003997"
   """
   @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
-  def to_string(number_tuple, precision \\ -1, scale \\ -1)
+  def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
 
   def to_string({int_value, exp}, precision, scale) when exp >= 0 do
     to_string_integer({int_value, exp}, abs_int_length(int_value), precision, scale)

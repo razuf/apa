@@ -16,6 +16,8 @@ defmodule Apa do
 
   You are welcome to read the code and if you find something that could be done better, please let me know.
   """
+  @precision_default Application.get_env(:apa, :precision_default, -1)
+  @scale_default Application.get_env(:apa, :scale_default, -1)
 
   @doc """
   APA : Arbitrary Precision Arithmetic - Addition
@@ -86,7 +88,7 @@ defmodule Apa do
   """
   # Todo: precision, scale as config - otherwise the +/2 is always with 30
   @spec add(String.t(), String.t(), integer(), integer()) :: String.t()
-  def add(left, right, precision \\ -1, scale \\ -1)
+  def add(left, right, precision \\ @precision_default, scale \\ @scale_default)
 
   def add(left, right, precision, scale) do
     ApaAdd.bc_add(left, right, precision, scale)
@@ -102,7 +104,12 @@ defmodule Apa do
   def {left_int, left_dec} + {right_int, right_dec}
       when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
              is_integer(right_dec) do
-    ApaAdd.bc_add_apa_number({left_int, left_dec}, {right_int, right_dec}, -1, -1)
+    ApaAdd.bc_add_apa_number(
+      {left_int, left_dec},
+      {right_int, right_dec},
+      @precision_default,
+      @scale_default
+    )
   end
 
   def left + right do
@@ -141,7 +148,7 @@ defmodule Apa do
     "0.00000000000000001"
   """
   @spec sub(String.t(), String.t(), integer(), integer()) :: String.t()
-  def sub(left, right, precision \\ -1, scale \\ -1)
+  def sub(left, right, precision \\ @precision_default, scale \\ @scale_default)
 
   def sub(left, right, precision, scale) do
     ApaSub.bc_sub(left, right, precision, scale)
@@ -158,7 +165,12 @@ defmodule Apa do
       when is_integer(left_dec)
       when is_integer(right_int)
       when is_integer(right_dec) do
-    ApaSub.bc_sub_apa_number({left_int, left_dec}, {right_int, right_dec}, -1, -1)
+    ApaSub.bc_sub_apa_number(
+      {left_int, left_dec},
+      {right_int, right_dec},
+      @precision_default,
+      @scale_default
+    )
   end
 
   def left - right do
@@ -189,7 +201,7 @@ defmodule Apa do
     "6"
   """
   @spec mul(String.t(), String.t(), integer(), integer()) :: String.t()
-  def mul(left, right, precision \\ -1, scale \\ -1)
+  def mul(left, right, precision \\ @precision_default, scale \\ @scale_default)
 
   def mul(left, right, precision, scale) do
     ApaMul.bc_mul(left, right, precision, scale)
@@ -208,6 +220,8 @@ defmodule Apa do
     Kernel.*(left, right)
   end
 
+  # Todo: implement mul ( ApaNumber,  ApaNumber, prec, scale )
+  #
   @doc """
   APA : Arbitrary Precision Arithmetic - Division
 
@@ -235,7 +249,7 @@ defmodule Apa do
     "0.1"
   """
   @spec div(String.t(), String.t(), integer(), integer()) :: String.t()
-  def div(left, right, precision \\ -1, scale \\ -1)
+  def div(left, right, precision \\ @precision_default, scale \\ @scale_default)
 
   def div(left, right, precision, scale) do
     ApaDiv.bc_div(left, right, precision, scale)
@@ -251,6 +265,8 @@ defmodule Apa do
     Kernel./(left, right)
   end
 
+  # Todo: implement div ( ApaNumber,  ApaNumber, prec, scale )
+  #
   @doc """
   APA : Arbitrary Precision Arithmetic - Comparison - ApaComp
 
@@ -316,7 +332,7 @@ defmodule Apa do
     0
   """
   @spec comp(String.t(), String.t(), integer(), integer()) :: integer() | Exception
-  def comp(left, right, precision \\ -1, scale \\ -1)
+  def comp(left, right, precision \\ @precision_default, scale \\ @scale_default)
 
   def comp(left, right, precision, scale) do
     ApaComp.bc_comp(left, right, precision, scale)
