@@ -7,7 +7,7 @@ defmodule Apa.MixProject do
   def project do
     [
       app: :apa,
-      version: "0.5.0",
+      version: "0.5.1",
       elixir: "~> 1.10",
       deps: deps(),
       name: "Apa",

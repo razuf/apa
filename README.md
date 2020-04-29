@@ -231,7 +231,7 @@ config :apa,
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.5.0"}
+      {:apa, "~> 0.5.1"}
     ]
   end
   ```
