@@ -4,7 +4,8 @@ defmodule ApaDiv do
   """
 
   # only used in division when the loop could be inifinite
-  @scale_limit 321
+  @scale_default Application.get_env(:apa, :scale_default, -1)
+  @scale_limit if @scale_default == -1, do: 321, else: @scale_default
 
   @doc """
   Division - internal function - please call Apa.div(left, right)
@@ -15,7 +16,12 @@ defmodule ApaDiv do
     {left_int, left_exp} = ApaNumber.from_string(left)
     {right_int, right_exp} = ApaNumber.from_string(right)
 
-    bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale)
+    # bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale)
+    ApaNumber.to_string(
+      bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}),
+      precision,
+      scale
+    )
   end
 
   def bc_div(left, right, precision, scale) do
@@ -27,20 +33,18 @@ defmodule ApaDiv do
     ")
   end
 
-  @spec bc_div_apa_number({integer(), integer()}, {integer(), integer()}, integer(), integer()) ::
-          String.t()
-  def bc_div_apa_number({_left_int, _left_exp}, {right_int, _right_exp}, _precision, _scale)
+  @spec bc_div_apa_number({integer(), integer()}, {integer(), integer()}) ::
+          {integer(), integer()}
+  def bc_div_apa_number({_left_int, _left_exp}, {right_int, _right_exp})
       when right_int == 0 do
-    # Todo: handling the NaN in ApaNumber and overall
-    "NaN"
+    # ApaNumber tuple for NaN
+    {0, 1}
   end
 
-  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale) do
+  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}) do
     bc_div_apa_number(
       {left_int, left_exp},
       {right_int, right_exp},
-      precision,
-      scale,
       rem(left_int, right_int),
       0
     )
@@ -49,33 +53,24 @@ defmodule ApaDiv do
   def bc_div_apa_number(
         {left_int, left_exp},
         {right_int, right_exp},
-        precision,
-        scale,
         rem,
         _acc
       )
       when rem == 0 do
-    ApaNumber.to_string({div(left_int, right_int), left_exp - right_exp}, precision, scale)
+    {div(left_int, right_int), left_exp - right_exp}
   end
 
-  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale, _rem, acc)
-      when scale == -1 and acc == @scale_limit do
-    ApaNumber.to_string({div(left_int, right_int), left_exp - right_exp}, precision, scale)
+  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, _rem, acc)
+      when acc == @scale_limit do
+    {div(left_int, right_int), left_exp - right_exp}
   end
 
-  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale, _rem, acc)
-      when scale == acc do
-    ApaNumber.to_string({div(left_int, right_int), left_exp - right_exp}, precision, scale)
-  end
-
-  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale, _rem, acc) do
+  def bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, _rem, acc) do
     {new_left_int, new_left_exp} = ApaNumber.shift_to({left_int, left_exp}, left_exp - 1)
 
     bc_div_apa_number(
       {new_left_int, new_left_exp},
       {right_int, right_exp},
-      precision,
-      scale,
       rem(new_left_int, right_int),
       acc + 1
     )

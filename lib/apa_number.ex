@@ -179,6 +179,11 @@ defmodule ApaNumber do
   @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
   def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
 
+  # ApaNumber for NaN - Not a Number - used for division by zero
+  def to_string({0, 1}, _precision, _scale) do
+    "NaN"
+  end
+
   def to_string({int_value, exp}, precision, scale) when exp >= 0 do
     to_string_integer({int_value, exp}, abs_int_length(int_value), precision, scale)
   end

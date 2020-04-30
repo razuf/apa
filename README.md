@@ -190,23 +190,6 @@ iex> Apa.mul("3.50 Euro", "12 Stück", -1, 2)
 "42.00"
 ```
 
-## Config
-
-default values for precision and scale
-
-```elixir
-# Configures the apa precision and scale defaults
-# scale < 0 (default -1) - no touch on decimal point
-# scale == 0 - always integer
-# scale > 0 - always make a decimal point at scale
-# precision <= 0 - (default -1) - no touch at the precision == arbitrary precision
-# precision > 0 - the total count of significant digits in the whole number
-# you can overwrite the defaults with the  following or ues explicit precision and/or scale
-config :apa,
-  precision_default: -1,
-  scale_default: -1
-  ```
-  
 ## Features
 
   A list of supported and planned features (maybe incomplete)
@@ -219,9 +202,9 @@ config :apa,
   - [x] precision (total count of significant digits)
   - [x] scale (number of digits after the decimal place)
   - [x] config for precision and scale defaults
-  - [ ] rounding
   - [ ] Infinity and NaN
   - [ ] string format for result
+  - [ ] rounding
   - [ ] performance - f.e. benchee check - this pure Elixir implementation looks like fast enough for normal applications (normal means not for number crunching)
 
 ## Installation
@@ -231,11 +214,32 @@ config :apa,
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.5.1"}
+      {:apa, "~> 0.5"}
     ]
   end
   ```
 
+## Config
+
+default values for precision and scale
+
+config/config.exs:
+
+```elixir
+use Mix.Config
+
+# Configures the apa precision and scale defaults
+# scale < 0 (default -1) - no touch on decimal point
+# scale == 0 - always integer
+# scale > 0 - always make a decimal point at scale
+# precision <= 0 - (default -1) - no touch at the precision == arbitrary precision
+# precision > 0 - the total count of significant digits in the whole number
+# you can overwrite the defaults with the  following or ues explicit precision and/or scale
+config :apa,
+  precision_default: -1,
+  scale_default: -1
+  ```
+  
 ## Usage
 
   ```elixir

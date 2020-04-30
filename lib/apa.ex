@@ -86,7 +86,6 @@ defmodule Apa do
     iex> Apa.add("1.0e2", "1.1")
     "101.1"
   """
-  # Todo: precision, scale as config - otherwise the +/2 is always with 30
   @spec add(String.t(), String.t(), integer(), integer()) :: String.t()
   def add(left, right, precision \\ @precision_default, scale \\ @scale_default)
 
@@ -99,16 +98,13 @@ defmodule Apa do
     Apa.add(left, right)
   end
 
-  # Todo: precision, scale default values from config here
-  @spec {integer(), integer()} + {integer(), integer()} :: String.t()
+  @spec {integer(), integer()} + {integer(), integer()} :: {integer(), integer()}
   def {left_int, left_dec} + {right_int, right_dec}
       when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
              is_integer(right_dec) do
     ApaAdd.bc_add_apa_number(
       {left_int, left_dec},
-      {right_int, right_dec},
-      @precision_default,
-      @scale_default
+      {right_int, right_dec}
     )
   end
 
@@ -159,7 +155,7 @@ defmodule Apa do
     Apa.sub(left, right)
   end
 
-  @spec {integer(), integer()} - {integer(), integer()} :: String.t()
+  @spec {integer(), integer()} - {integer(), integer()} :: {integer(), integer()}
   def {left_int, left_dec} - {right_int, right_dec}
       when is_integer(left_int)
       when is_integer(left_dec)
@@ -167,9 +163,7 @@ defmodule Apa do
       when is_integer(right_dec) do
     ApaSub.bc_sub_apa_number(
       {left_int, left_dec},
-      {right_int, right_dec},
-      @precision_default,
-      @scale_default
+      {right_int, right_dec}
     )
   end
 
@@ -212,6 +206,18 @@ defmodule Apa do
     Apa.mul(left, right)
   end
 
+  @spec {integer(), integer()} * {integer(), integer()} :: {integer(), integer()}
+  def {left_int, left_dec} * {right_int, right_dec}
+      when is_integer(left_int)
+      when is_integer(left_dec)
+      when is_integer(right_int)
+      when is_integer(right_dec) do
+    ApaMul.bc_mul_apa_number(
+      {left_int, left_dec},
+      {right_int, right_dec}
+    )
+  end
+
   @spec integer * integer :: integer
   @spec float * float :: float
   @spec integer * float :: float
@@ -220,7 +226,6 @@ defmodule Apa do
     Kernel.*(left, right)
   end
 
-  # Todo: implement mul ( ApaNumber,  ApaNumber, prec, scale )
   #
   @doc """
   APA : Arbitrary Precision Arithmetic - Division
@@ -260,12 +265,23 @@ defmodule Apa do
     Apa.div(left, right)
   end
 
-  @spec number / number :: float
+  @spec {integer(), integer()} / {integer(), integer()} :: {integer(), integer()}
+  def {left_int, left_dec} / {right_int, right_dec}
+      when is_integer(left_int)
+      when is_integer(left_dec)
+      when is_integer(right_int)
+      when is_integer(right_dec) do
+    ApaDiv.bc_div_apa_number(
+      {left_int, left_dec},
+      {right_int, right_dec}
+    )
+  end
+
+  # @spec number / number :: float
   def left / right do
     Kernel./(left, right)
   end
 
-  # Todo: implement div ( ApaNumber,  ApaNumber, prec, scale )
   #
   @doc """
   APA : Arbitrary Precision Arithmetic - Comparison - ApaComp
