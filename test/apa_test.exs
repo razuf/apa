@@ -432,6 +432,7 @@ defmodule ApaTest do
 
     # assert "100" == ApaNumber.to_string({123, 0}, 1, 0)
     assert "1.23" == ApaNumber.to_string({123, -2}, -1, 2)
+    assert "123.00" == ApaNumber.to_string({123, 0}, -1, 2)
 
     # assert "55" == Apa.add("12.34", "43.21", 2, 0)
     # assert "50.00" == Apa.add("12.34", "43.21", 1, 2)

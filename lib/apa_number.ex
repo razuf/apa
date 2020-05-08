@@ -313,18 +313,18 @@ defmodule ApaNumber do
   end
 
   ########## to_string_integer  exp >= 0
-  defp to_string_integer({int_value, exp}, precision, scale) do
+  defp to_string_integer({int_value, exp}, _precision, scale) do
     {shifted_int, 0} = shift_to({int_value, exp}, 0)
 
     Integer.to_string(shifted_int)
-    |> scale_up_integer(scale, exp)
+    |> scale_up_integer(scale)
   end
 
-  defp scale_up_integer(int_string, scale, exp) when scale <= 0 do
+  defp scale_up_integer(int_string, scale) when scale <= 0 do
     int_string
   end
 
-  defp scale_up_integer(int_string, scale, exp) when scale > 0 do
+  defp scale_up_integer(int_string, scale) when scale > 0 do
     # Todo: check speed with benchee String.duplicate/2
     # maybe better :lists.duplicate(scale, ?0)
     scale_zeros = String.duplicate("0", scale)
@@ -332,14 +332,14 @@ defmodule ApaNumber do
   end
 
   ########## to_string_decimals  exp < 0
-  defp to_string_decimals({int_value, exp}, precision, scale) when scale == 0 do
+  defp to_string_decimals({int_value, exp}, _precision, scale) when scale == 0 do
     int_value
     |> div(ApaNumber.pow10(abs(scale + exp)))
     |> Integer.to_charlist()
     |> IO.iodata_to_binary()
   end
 
-  defp to_string_decimals({int_value, exp}, precision, scale) when scale < 0 do
+  defp to_string_decimals({int_value, exp}, _precision, scale) when scale < 0 do
     int_value
     |> Integer.to_charlist()
     |> list_and_length()
@@ -347,7 +347,7 @@ defmodule ApaNumber do
     |> IO.iodata_to_binary()
   end
 
-  defp to_string_decimals({int_value, exp}, precision, scale) when scale + exp >= 0 do
+  defp to_string_decimals({int_value, exp}, _precision, scale) when scale + exp >= 0 do
     zeros = scale + exp
 
     (int_value * ApaNumber.pow10(zeros))
@@ -357,7 +357,7 @@ defmodule ApaNumber do
     |> IO.iodata_to_binary()
   end
 
-  defp to_string_decimals({int_value, exp}, precision, scale) when scale + exp < 0 do
+  defp to_string_decimals({int_value, exp}, _precision, scale) when scale + exp < 0 do
     shrink = abs(scale + exp)
 
     div(int_value, ApaNumber.pow10(shrink))
