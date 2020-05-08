@@ -141,7 +141,7 @@ Slower performance compared to original Elixir integer or float calculation (see
   ```elixir
   def deps do
     [
-      {:apa, "~> 0.5"}
+      {:apa, "~> 0.6"}
     ]
   end
   ```

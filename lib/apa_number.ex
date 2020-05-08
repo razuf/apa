@@ -297,11 +297,15 @@ defmodule ApaNumber do
   def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
 
   def to_string({int_value, _exp}, precision, scale) when int_value == 0 do
-    to_string_integer({0, 0}, 0, precision, scale)
+    to_string_integer({0, 0}, precision, scale)
   end
 
   def to_string({int_value, exp}, precision, scale) when exp >= 0 do
-    to_string_integer({int_value, exp}, abs_int_length(int_value), precision, scale)
+    to_string_integer({int_value, exp}, precision, scale)
+  end
+
+  def to_string({int_value, exp}, precision, scale) when exp < 0 and int_value < 0 do
+    "-" <> to_string_decimals({int_value * -1, exp}, precision, scale)
   end
 
   def to_string({int_value, exp}, precision, scale) when exp < 0 do
@@ -309,148 +313,71 @@ defmodule ApaNumber do
   end
 
   ########## to_string_integer  exp >= 0
-  defp to_string_integer({int_value, exp}, abs_length, precision, scale) when scale > 0 do
-    int_string = to_string_integer({int_value, exp}, abs_length, precision, 0)
-    scaling_integer(int_string, scale)
+  defp to_string_integer({int_value, exp}, precision, scale) do
+    {shifted_int, 0} = shift_to({int_value, exp}, 0)
+
+    Integer.to_string(shifted_int)
+    |> scale_up_integer(scale, exp)
   end
 
-  defp to_string_integer({int_value, exp}, abs_length, precision, _scale)
-       when abs_length >= precision and
-              precision > 0 do
-    {d1, _d2} =
-      int_value
-      |> abs()
-      |> Kernel.to_string()
-      |> String.split_at(precision)
-
-    sign = sign_of(int_value)
-    d1_filled = fill_if_empty(d1)
-    d2_filled = fill_up_string_trailing_zeros("", abs_length - precision + exp)
-
-    "#{sign}#{d1_filled}#{d2_filled}"
+  defp scale_up_integer(int_string, scale, exp) when scale <= 0 do
+    int_string
   end
 
-  defp to_string_integer({int_value, exp}, _abs_length, _precision, _scale) do
-    d1_filled =
-      int_value
-      |> Kernel.to_string()
-      |> fill_up_string_trailing_zeros(exp)
-
-    "#{d1_filled}"
-  end
-
-  ########## to_string_decimals  exp < 0
-
-  defp to_string_decimals({int_value, exp}, precision, scale) when scale == 0 do
-    {d1, _d2} = int_abs_string_split(int_value, exp, precision, scale)
-    sign = sign_of(int_value)
-    d1_filled = fill_if_empty(d1)
-
-    "#{sign}#{d1_filled}"
-  end
-
-  defp to_string_decimals({int_value, exp}, precision, scale) when scale < 0 do
-    {d1, d2} = int_abs_string_split(int_value, exp, precision, scale)
-    sign = sign_of(int_value)
-    d1_filled = fill_if_empty(d1)
-
-    abs_int_string_length = Kernel.byte_size(d2)
-    d2_filled = fill_leading(d2, abs_int_string_length, abs(exp))
-
-    "#{sign}#{d1_filled}.#{d2_filled}"
-  end
-
-  defp to_string_decimals({int_value, exp}, precision, scale) do
-    {d1, d2} = int_abs_string_split(int_value, exp, precision, scale)
-    sign = sign_of(int_value)
-    d1_filled = fill_if_empty(d1)
-
-    abs_int_string_length = Kernel.byte_size(d2)
-    d2_filled = fill_leading(d2, abs_int_string_length, abs(exp))
-    # Todo: rounding here
-    d2_filled_length = Kernel.byte_size(d2_filled)
-    d2_scaled = scaling(d2_filled, d2_filled_length, scale)
-
-    "#{sign}#{d1_filled}.#{d2_scaled}"
-  end
-
-  ### helper
-
-  defp scaling_integer(int_string, scale) do
+  defp scale_up_integer(int_string, scale, exp) when scale > 0 do
+    # Todo: check speed with benchee String.duplicate/2
+    # maybe better :lists.duplicate(scale, ?0)
     scale_zeros = String.duplicate("0", scale)
-
     "#{int_string}.#{scale_zeros}"
   end
 
-  defp int_abs_string_split(int_value, split_point, precision, _scale) do
-    to_string_integer({int_value, 0}, abs_int_length(int_value), precision, 0)
-    |> String.trim_leading("-")
-    |> String.split_at(split_point)
-  end
-
-  defp abs_int_length(int_value) do
+  ########## to_string_decimals  exp < 0
+  defp to_string_decimals({int_value, exp}, precision, scale) when scale == 0 do
     int_value
-    |> abs()
-    |> Kernel.to_string()
-    |> Kernel.byte_size()
+    |> div(ApaNumber.pow10(abs(scale + exp)))
+    |> Integer.to_charlist()
+    |> IO.iodata_to_binary()
   end
 
-  defp sign_of(int_value) when int_value < 0 do
-    "-"
+  defp to_string_decimals({int_value, exp}, precision, scale) when scale < 0 do
+    int_value
+    |> Integer.to_charlist()
+    |> list_and_length()
+    |> to_string_decimals_list(exp)
+    |> IO.iodata_to_binary()
   end
 
-  defp sign_of(_int_value) do
-    ""
+  defp to_string_decimals({int_value, exp}, precision, scale) when scale + exp >= 0 do
+    zeros = scale + exp
+
+    (int_value * ApaNumber.pow10(zeros))
+    |> Integer.to_charlist()
+    |> list_and_length()
+    |> to_string_decimals_list(-scale)
+    |> IO.iodata_to_binary()
   end
 
-  defp fill_if_empty(int_string) when int_string == <<>> do
-    fill_up_string_leading_zeros("", 1)
+  defp to_string_decimals({int_value, exp}, precision, scale) when scale + exp < 0 do
+    shrink = abs(scale + exp)
+
+    div(int_value, ApaNumber.pow10(shrink))
+    |> Integer.to_charlist()
+    |> list_and_length()
+    |> to_string_decimals_list(-scale)
+    |> IO.iodata_to_binary()
   end
 
-  defp fill_if_empty(int_string) do
-    int_string
+  ###
+  defp to_string_decimals_list({list, list_len}, exp) when list_len + exp > 0 do
+    List.insert_at(list, list_len + exp, ?.)
   end
 
-  # abs_decimal_point > 0
-
-  defp fill_leading(abs_int_string, abs_int_string_length, abs_decimal_point)
-       when abs_int_string_length < abs_decimal_point do
-    fill_up_string_leading_zeros(
-      abs_int_string,
-      abs_decimal_point - abs_int_string_length
-    )
+  defp to_string_decimals_list({list, list_len}, exp) do
+    '0.' ++ :lists.duplicate(-(list_len + exp), ?0) ++ list
   end
 
-  defp fill_leading(
-         abs_int_string,
-         _abs_int_string_length,
-         _abs_decimal_point
-       ) do
-    abs_int_string
-  end
-
-  defp scaling(int_string, int_string_length, scale)
-       when int_string_length < scale do
-    fill_up_string_trailing_zeros(int_string, scale - int_string_length)
-  end
-
-  defp scaling(int_string, int_string_length, scale)
-       when int_string_length > scale do
-    int_string
-    |> String.slice(0, scale)
-  end
-
-  defp scaling(int_string, int_string_length, scale)
-       when int_string_length == scale do
-    int_string
-  end
-
-  defp fill_up_string_leading_zeros(fill_up_string, zeros_count) do
-    "#{String.duplicate("0", zeros_count)}#{fill_up_string}"
-  end
-
-  defp fill_up_string_trailing_zeros(fill_up_string, zeros_count) do
-    "#{fill_up_string}#{String.duplicate("0", zeros_count)}"
+  defp list_and_length(list) do
+    {list, length(list)}
   end
 
   @doc """
