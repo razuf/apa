@@ -212,9 +212,9 @@ iex> "1" |> Apa.add("2") |> Apa.add("3") |> Apa.sub("4") |> Apa.add("5") |> Apa.
 
 ## Performance comparison with Decimal - fortunately it's 'a little' faster and lower memory consumption
 
-```
-Benchmark suite benchee configuration:
-```
+[More benchmark results (f.e.linux ), other tests and infos.](https://github.com/razuf/apa/blob/master/examples/apa_example/benchee/bench_results.md).
+
+Benchee script in examples folder - [bench_apa_short.exs](https://github.com/razuf/apa/blob/master/examples/apa_example/benchee/bench_apa_short.exs):
 
 ```elixir
 inputs = %{

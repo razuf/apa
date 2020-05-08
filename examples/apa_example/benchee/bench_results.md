@@ -1,6 +1,6 @@
 ## Performance comparison with Decimal - fortunately it's much faster and lower memory
 
-unbelievable - I will check that with another environment
+unbelievable - but checked with another environment (linux - VM - see below)
 ```
 ##### With input 1 Digits Integer as String #####
 Name                        ips        average  deviation         median         99th %
@@ -206,4 +206,49 @@ warmup: 1 s
 time: 6 s
 memory time: 1 s
 parallel: 1
+```
+
+## Linux VM Test
+
+```
+Operating System: Linux
+CPU Information: QEMU Virtual CPU version 2.5
+Number of Available Cores: 1
+Available memory: 1.95 GB
+Elixir 1.10.3
+Erlang 22.3.3
+
+Benchmark suite executing with the following configuration:
+warmup: 1 s
+time: 6 s
+memory time: 1 s
+parallel: 1
+inputs: 606 Digits Integer as String
+Estimated total run time: 32 s
+
+Benchmarking Apa.add() Dec with input 606 Digits Integer as String...
+Benchmarking Apa.add() Int with input 606 Digits Integer as String...
+Benchmarking Decimal.add() Dec with input 606 Digits Integer as String...
+Benchmarking Decimal.add() Int with input 606 Digits Integer as String...
+
+##### With input 606 Digits Integer as String #####
+Name                        ips        average  deviation         median         99th %
+Apa.add() Int          924.31 K        1.08 μs ±12622.87%        0.42 μs        2.60 μs
+Apa.add() Dec          183.15 K        5.46 μs  ±2928.67%        4.06 μs        9.29 μs
+Decimal.add() Int       11.03 K       90.68 μs   ±679.43%       69.09 μs      152.41 μs
+Decimal.add() Dec       10.58 K       94.54 μs   ±670.69%       73.36 μs      194.98 μs
+
+Comparison: 
+Apa.add() Int          924.31 K
+Apa.add() Dec          183.15 K - 5.05x slower +4.38 μs
+Decimal.add() Int       11.03 K - 83.81x slower +89.60 μs
+Decimal.add() Dec       10.58 K - 87.38x slower +93.46 μs
+
+Memory usage statistics:
+
+Name                 Memory usage
+Apa.add() Int           0.0703 KB
+Apa.add() Dec           0.0938 KB - 1.33x memory usage +0.0234 KB
+Decimal.add() Int         2.25 KB - 32.00x memory usage +2.18 KB
+Decimal.add() Dec         1.38 KB - 19.56x memory usage +1.30 KB
 ```
