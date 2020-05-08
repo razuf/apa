@@ -21,7 +21,10 @@ defmodule ApaExample.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:apa, git: "https://github.com/razuf/apa.git"}
+      {:apa, path: "../../"},
+      {:decimal, git: "https://github.com/ericmj/decimal", only: :dev, override: true},
+      {:benchee, "~> 1.0", only: :dev},
+      {:benchee_html, "~> 1.0", only: :dev}
     ]
   end
 end

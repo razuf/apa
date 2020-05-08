@@ -9,7 +9,19 @@ defmodule ApaSub do
   """
   @spec bc_sub(String.t(), String.t(), integer(), integer()) :: String.t() | Exception
   def bc_sub(left, right, precision, scale) when is_binary(left) and is_binary(right) do
-    Apa.add(left, ApaNumber.add_minus_sign(right), precision, scale)
+    {left_int, left_exp} = ApaNumber.from_string(left)
+    {right_int, right_exp} = ApaNumber.from_string(right)
+
+    bc_sub_apa_number({left_int, left_exp}, {right_int, right_exp})
+    |> ApaNumber.to_string(precision, scale)
+  end
+
+  @spec bc_sub({integer(), integer()}, {integer(), integer()}, integer(), integer()) ::
+          {integer(), integer()}
+  def bc_sub({left_int, left_exp}, {right_int, right_exp}, _precision, _scale)
+      when is_integer(left_int) and is_integer(left_exp) and is_integer(right_int) and
+             is_integer(right_exp) do
+    bc_sub_apa_number({left_int, left_exp}, {right_int, right_exp})
   end
 
   def bc_sub(left, right, precision, scale) do
@@ -23,7 +35,7 @@ defmodule ApaSub do
 
   @spec bc_sub_apa_number({integer(), integer()}, {integer(), integer()}) ::
           {integer(), integer()}
-  def bc_sub_apa_number({left_int, left_dec}, {right_int, right_dec}) do
-    ApaAdd.bc_add_apa_number({left_int, left_dec}, {right_int * -1, right_dec})
+  def bc_sub_apa_number({left_int, left_exp}, {right_int, right_exp}) do
+    ApaAdd.bc_add_apa_number({left_int, left_exp}, {right_int * -1, right_exp})
   end
 end

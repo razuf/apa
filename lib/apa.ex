@@ -99,12 +99,12 @@ defmodule Apa do
   end
 
   @spec {integer(), integer()} + {integer(), integer()} :: {integer(), integer()}
-  def {left_int, left_dec} + {right_int, right_dec}
-      when is_integer(left_int) and is_integer(left_dec) and is_integer(right_int) and
-             is_integer(right_dec) do
+  def {left_int, left_exp} + {right_int, right_exp}
+      when is_integer(left_int) and is_integer(left_exp) and is_integer(right_int) and
+             is_integer(right_exp) do
     ApaAdd.bc_add_apa_number(
-      {left_int, left_dec},
-      {right_int, right_dec}
+      {left_int, left_exp},
+      {right_int, right_exp}
     )
   end
 
@@ -156,14 +156,14 @@ defmodule Apa do
   end
 
   @spec {integer(), integer()} - {integer(), integer()} :: {integer(), integer()}
-  def {left_int, left_dec} - {right_int, right_dec}
-      when is_integer(left_int)
-      when is_integer(left_dec)
-      when is_integer(right_int)
-      when is_integer(right_dec) do
+  def {left_int, left_exp} - {right_int, right_exp}
+      when is_integer(left_int) and
+             is_integer(left_exp) and
+             is_integer(right_int) and
+             is_integer(right_exp) do
     ApaSub.bc_sub_apa_number(
-      {left_int, left_dec},
-      {right_int, right_dec}
+      {left_int, left_exp},
+      {right_int, right_exp}
     )
   end
 
@@ -207,14 +207,14 @@ defmodule Apa do
   end
 
   @spec {integer(), integer()} * {integer(), integer()} :: {integer(), integer()}
-  def {left_int, left_dec} * {right_int, right_dec}
-      when is_integer(left_int)
-      when is_integer(left_dec)
-      when is_integer(right_int)
-      when is_integer(right_dec) do
+  def {left_int, left_exp} * {right_int, right_exp}
+      when is_integer(left_int) and
+             is_integer(left_exp) and
+             is_integer(right_int) and
+             is_integer(right_exp) do
     ApaMul.bc_mul_apa_number(
-      {left_int, left_dec},
-      {right_int, right_dec}
+      {left_int, left_exp},
+      {right_int, right_exp}
     )
   end
 
@@ -266,14 +266,14 @@ defmodule Apa do
   end
 
   @spec {integer(), integer()} / {integer(), integer()} :: {integer(), integer()}
-  def {left_int, left_dec} / {right_int, right_dec}
-      when is_integer(left_int)
-      when is_integer(left_dec)
-      when is_integer(right_int)
-      when is_integer(right_dec) do
+  def {left_int, left_exp} / {right_int, right_exp}
+      when is_integer(left_int) and
+             is_integer(left_exp) and
+             is_integer(right_int) and
+             is_integer(right_exp) do
     ApaDiv.bc_div_apa_number(
-      {left_int, left_dec},
-      {right_int, right_dec}
+      {left_int, left_exp},
+      {right_int, right_exp}
     )
   end
 

@@ -12,11 +12,16 @@ defmodule ApaMul do
     {left_int, left_exp} = ApaNumber.from_string(left)
     {right_int, right_exp} = ApaNumber.from_string(right)
 
-    ApaNumber.to_string(
-      bc_mul_apa_number({left_int, left_exp}, {right_int, right_exp}),
-      precision,
-      scale
-    )
+    bc_mul_apa_number({left_int, left_exp}, {right_int, right_exp})
+    |> ApaNumber.to_string(precision, scale)
+  end
+
+  @spec bc_mul({integer(), integer()}, {integer(), integer()}, integer(), integer()) ::
+          {integer(), integer()}
+  def bc_mul({left_int, left_exp}, {right_int, right_exp}, _precision, _scale)
+      when is_integer(left_int) and is_integer(left_exp) and is_integer(right_int) and
+             is_integer(right_exp) do
+    bc_mul_apa_number({left_int, left_exp}, {right_int, right_exp})
   end
 
   def bc_mul(left, right, precision, scale) do

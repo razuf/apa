@@ -8,67 +8,7 @@ defmodule ApaNumber do
   """
   @precision_default Application.get_env(:apa, :precision_default, -1)
   @scale_default Application.get_env(:apa, :scale_default, -1)
-
-  defp parse("-" <> binary) do
-    "-" <> parse_unsigned(binary)
-  end
-
-  defp parse("+" <> binary), do: parse_unsigned(binary)
-
-  defp parse(binary), do: parse_unsigned(binary)
-
-  defp parse_unsigned(<<digit, rest::binary>>) when digit in ?0..?9 do
-    parse_unsigned(rest, false, false, <<digit>>)
-  end
-
-  defp parse_unsigned(binary) when is_binary(binary), do: :error
-
-  defp parse_unsigned(<<digit, rest::binary>>, dot?, e?, acc) when digit in ?0..?9 do
-    parse_unsigned(rest, dot?, e?, <<acc::binary, digit>>)
-  end
-
-  defp parse_unsigned(<<?., rest::binary>>, false, false, acc) do
-    parse_unsigned(rest, true, false, <<acc::binary, ?.>>)
-  end
-
-  defp parse_unsigned(<<exp_marker, sign, rest::binary>>, dot?, false, acc)
-       when exp_marker in 'eE' and sign in '-+' do
-    expo = parse_expo(<<rest::binary>>)
-    expo = String.to_integer(<<sign, expo::binary>>)
-    {int_value, exp} = from_parsed_string(acc)
-    new_acc = ApaNumber.to_string({int_value, exp + expo})
-
-    parse_unsigned("", dot?, true, <<new_acc::binary>>)
-  end
-
-  defp parse_unsigned(<<exp_marker, rest::binary>>, dot?, false, acc)
-       when exp_marker in 'eE' do
-    expo = String.to_integer(parse_expo(<<rest::binary>>))
-    {int_value, exp} = from_parsed_string(acc)
-    new_acc = ApaNumber.to_string({int_value, exp + expo})
-
-    parse_unsigned("", dot?, true, <<new_acc::binary>>)
-  end
-
-  defp parse_unsigned(_rest, _dot?, _e?, acc) do
-    acc
-  end
-
-  defp parse_expo(<<digit, rest::binary>>) when digit in ?0..?9 do
-    parse_expo(rest, false, <<digit>>)
-  end
-
-  defp parse_expo(binary) when is_binary(binary) do
-    "0"
-  end
-
-  defp parse_expo(<<digit, rest::binary>>, e?, acc) when digit in ?0..?9 do
-    parse_expo(rest, e?, <<acc::binary, digit>>)
-  end
-
-  defp parse_expo(_rest, _e?, acc) do
-    acc
-  end
+  @parse_digit_memory_speed_border Application.get_env(:apa, :parse_digit_memory_speed_border, 22)
 
   @doc """
   Parses a binary (number string) into an ApaNumber tuple.
@@ -115,7 +55,7 @@ defmodule ApaNumber do
     {3, -12}
 
     iex> ApaNumber.from_string("+0003e+12")
-    {3000000000000, 0}
+    {3, 12}
 
     iex> ApaNumber.from_string("+0003e+00000")
     {3, 0}
@@ -125,36 +65,213 @@ defmodule ApaNumber do
   """
   @spec from_string(binary) :: {integer, integer} | :error
   def from_string(binary) do
-    case parse(binary) do
-      :error ->
-        :error
+    parse(binary)
+  end
 
-      number_string ->
-        from_parsed_string(number_string)
+  ###################################################################################################
+  # Parsing
+  ###################################################################################################
+  @spec parse(binary) :: {integer, integer} | :error
+  def parse("+" <> rest) when byte_size(rest) + 1 > @parse_digit_memory_speed_border do
+    parse_unsigned_decimal(rest)
+  end
+
+  def parse("-" <> rest) when byte_size(rest) + 1 > @parse_digit_memory_speed_border do
+    case parse_unsigned_decimal(rest) do
+      {int_value, exp} -> {int_value * -1, exp}
+      :error -> :error
     end
   end
 
-  defp from_parsed_string(number_string) do
-    if String.contains?(number_string, ".") do
-      [d1, d2] =
-        number_string
-        |> String.trim_trailing("0")
-        |> String.split(".")
+  def parse(binary)
+      when byte_size(binary) > @parse_digit_memory_speed_border and is_binary(binary) do
+    parse_unsigned_decimal(binary)
+  end
 
-      exp = String.length(d2) * -1
+  def parse("+" <> rest) do
+    parse_unsigned(rest)
+  end
 
-      int_value =
-        [d1, d2]
-        |> Enum.join()
-        |> String.to_integer()
+  def parse("-" <> rest) do
+    case parse_unsigned(rest) do
+      {int_value, exp} -> {int_value * -1, exp}
+      :error -> :error
+    end
+  end
 
-      {int_value, exp}
+  def parse(binary) when is_binary(binary) do
+    parse_unsigned(binary)
+  end
+
+  ###################################################################################################
+  # Decimal like version for improve speed in case of bigger strings
+  # at the cost of more memory consumption - see @parse_digit_memory_speed_border in docs
+  ###################################################################################################
+  defp parse_unsigned_decimal(bin) do
+    {int, rest} = parse_digits_decimal(bin)
+    {float, rest} = parse_float_decimal(rest)
+    {exp, _rest} = parse_exp_decimal(rest)
+
+    if int == [] and float == [] do
+      :error
     else
-      int_value = String.to_integer(number_string)
-      exp = 0
-      {int_value, exp}
+      int = if int == [], do: '0', else: int
+      exp = if exp == [], do: '0', else: exp
+
+      {List.to_integer(int ++ float), List.to_integer(exp) - length(float)}
     end
   end
+
+  defp parse_float_decimal("." <> rest), do: parse_digits_decimal(rest)
+  defp parse_float_decimal(bin), do: {[], bin}
+
+  defp parse_exp_decimal(<<e, rest::binary>>) when e in [?e, ?E] do
+    case rest do
+      <<sign, rest::binary>> when sign in [?+, ?-] ->
+        {digits, rest} = parse_digits_decimal(rest)
+        {[sign | digits], rest}
+
+      _ ->
+        parse_digits_decimal(rest)
+    end
+  end
+
+  defp parse_exp_decimal(bin), do: {[], bin}
+
+  defp parse_digits_decimal(bin), do: parse_digits_decimal(bin, [])
+
+  defp parse_digits_decimal(<<digit, rest::binary>>, acc) when digit in ?0..?9 do
+    parse_digits_decimal(rest, [digit | acc])
+  end
+
+  defp parse_digits_decimal(rest, acc) do
+    {:lists.reverse(acc), rest}
+  end
+
+  ###################################################################################################
+  # Apa version - with more speed for less then 22 digits an much less memory consumption
+  ###################################################################################################
+  defp parse_unsigned(bin) do
+    {int, _int_len, int_trailing_zeros, int_rest} = parse_digits(bin)
+
+    if int == :error do
+      :error
+    else
+      if int_rest == "" do
+        parse_unsigned_integer(int, int_trailing_zeros)
+      else
+        {float, float_len, float_trailing_zeros, float_rest} = parse_float(int_rest)
+
+        if float_rest == "" do
+          if float == :error do
+            parse_unsigned_integer(int, int_trailing_zeros)
+          else
+            float = div(float, ApaNumber.pow10(float_trailing_zeros))
+
+            if float == 0 do
+              parse_unsigned_integer(int, int_trailing_zeros)
+            else
+              parse_unsigned_float(int, float, float_len, float_trailing_zeros)
+            end
+          end
+        else
+          {exp, _exp_rest} = parse_exp(float_rest)
+
+          if exp == :error do
+            if float == :error do
+              parse_unsigned_integer(int, int_trailing_zeros)
+            else
+              if float == 0 do
+                {int, int_trailing_zeros}
+              else
+                parse_unsigned_float(int, float, float_len, float_trailing_zeros)
+              end
+            end
+          else
+            if float == :error do
+              parse_unsigned_integer(int, int_trailing_zeros, exp)
+            else
+              if float == 0 do
+                parse_unsigned_integer(int, int_trailing_zeros, exp)
+              else
+                parse_unsigned_float(int, float, float_len, float_trailing_zeros, exp)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  defp parse_unsigned_integer(int, int_trailing_zeros) do
+    int = div(int, ApaNumber.pow10(int_trailing_zeros))
+    {int, int_trailing_zeros}
+  end
+
+  defp parse_unsigned_integer(int, int_trailing_zeros, exp) do
+    int = div(int, ApaNumber.pow10(int_trailing_zeros))
+    {int, int_trailing_zeros + exp}
+  end
+
+  defp parse_unsigned_float(int, float, float_len, float_trailing_zeros) do
+    int_value = int * ApaNumber.pow10(float_len - float_trailing_zeros) + float
+    float_exp = float_trailing_zeros - float_len
+    {int_value, float_exp}
+  end
+
+  defp parse_unsigned_float(int, float, float_len, float_trailing_zeros, exp) do
+    float = div(float, ApaNumber.pow10(float_trailing_zeros))
+    int_value = int * ApaNumber.pow10(float_len - float_trailing_zeros) + float
+    float_exp = float_trailing_zeros - float_len
+    {int_value, float_exp + exp}
+  end
+
+  defp parse_float("." <> rest), do: parse_digits(rest)
+  defp parse_float(bin), do: {:error, 0, 0, bin}
+
+  defp parse_exp(<<e, rest::binary>>) when e in [?e, ?E] do
+    case rest do
+      <<sign, rest::binary>> when sign in [?-] ->
+        {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
+        {-1 * exp, exp_rest}
+
+      <<sign, rest::binary>> when sign in [?+] ->
+        {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
+        {exp, exp_rest}
+
+      _ ->
+        {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
+        {exp, exp_rest}
+    end
+  end
+
+  defp parse_exp(bin) do
+    {0, bin}
+  end
+
+  defp parse_digits(<<digit, rest::binary>>) when digit in ?0..?9 do
+    parse_digits(rest, digit - 48, 0, 1)
+  end
+
+  defp parse_digits(rest), do: {:error, 0, 0, rest}
+
+  defp parse_digits(<<digit, rest::binary>>, acc, trailing_zeros, len)
+       when digit in ?0..?9 do
+    trailing_zeros = if digit == 48 and acc > 0, do: trailing_zeros + 1, else: 0
+
+    # unbelievable but mult by 10 is so time expensive here !!! there is a difference of 280 K in 5 sec
+    # maybe because of recursion
+    # 404.86 K in 5 sec (benchee)
+    # parse_digits(rest, acc + 10 + (digit - 48), trailing_zeros, len + 1)
+
+    # 123.90 K in 5 sec (benchee)
+    parse_digits(rest, acc * 10 + (digit - 48), trailing_zeros, len + 1)
+  end
+
+  defp parse_digits(rest, acc, trailing_zeros, len),
+    do: {acc, len, trailing_zeros, rest}
+
+  ###################################################################################################
 
   @doc """
   Creates a string from an ApaNumber tuple.
@@ -179,9 +296,8 @@ defmodule ApaNumber do
   @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
   def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
 
-  # ApaNumber for NaN - Not a Number - used for division by zero
-  def to_string({0, 1}, _precision, _scale) do
-    "NaN"
+  def to_string({int_value, _exp}, precision, scale) when int_value == 0 do
+    to_string_integer({0, 0}, 0, precision, scale)
   end
 
   def to_string({int_value, exp}, precision, scale) when exp >= 0 do
@@ -238,7 +354,7 @@ defmodule ApaNumber do
     sign = sign_of(int_value)
     d1_filled = fill_if_empty(d1)
 
-    abs_int_string_length = String.length(d2)
+    abs_int_string_length = Kernel.byte_size(d2)
     d2_filled = fill_leading(d2, abs_int_string_length, abs(exp))
 
     "#{sign}#{d1_filled}.#{d2_filled}"
@@ -249,10 +365,10 @@ defmodule ApaNumber do
     sign = sign_of(int_value)
     d1_filled = fill_if_empty(d1)
 
-    abs_int_string_length = String.length(d2)
+    abs_int_string_length = Kernel.byte_size(d2)
     d2_filled = fill_leading(d2, abs_int_string_length, abs(exp))
     # Todo: rounding here
-    d2_filled_length = String.length(d2_filled)
+    d2_filled_length = Kernel.byte_size(d2_filled)
     d2_scaled = scaling(d2_filled, d2_filled_length, scale)
 
     "#{sign}#{d1_filled}.#{d2_scaled}"
@@ -276,7 +392,7 @@ defmodule ApaNumber do
     int_value
     |> abs()
     |> Kernel.to_string()
-    |> String.length()
+    |> Kernel.byte_size()
   end
 
   defp sign_of(int_value) when int_value < 0 do
@@ -370,25 +486,21 @@ defmodule ApaNumber do
 
   def shift_to({int_value, exp}, shift_decimal_point)
       when abs(exp) < abs(shift_decimal_point) do
-    new_value =
-      int_value
-      |> Kernel.to_string()
-      |> fill_up_string_trailing_zeros(abs(shift_decimal_point) - abs(exp))
-      |> String.to_integer()
-
-    {new_value, shift_decimal_point}
+    diff = shift_decimal_point - exp
+    int_value = int_value * pow10(abs(diff))
+    {int_value, shift_decimal_point}
   end
 
   def shift_to({int_value, exp}, shift_decimal_point) do
     counted_zeros = count_trailing_zeros(int_value)
     diff = shift_decimal_point - exp
 
-    if counted_zeros >= diff do
+    if counted_zeros > 0 and counted_zeros >= diff do
       new_int = remove_number_of_zeros(int_value, diff)
       {new_int, shift_decimal_point}
     else
-      # Impossible operation - return the orig input - see doc
-      {int_value, exp}
+      int_value = int_value * pow10(abs(diff))
+      {int_value, shift_decimal_point}
     end
   end
 
@@ -415,34 +527,25 @@ defmodule ApaNumber do
   end
 
   @doc """
-  Adds a minus sign to a number string if necessary.
-  Could be done by converting to integer and multiply with -1 and reconvert to string.
-  But this works nice and elegant with strings and pattern matching too.
+  This is based on Decimal version of pow10 (cool!!! - is much faster then my version).
+  Extended with :error guard for < 0 - in case that ever happen.
 
   ## Examples
 
-    iex> ApaNumber.add_minus_sign("3")
-    "-3"
+    iex> ApaNumber.pow10(3)
+    1000
 
-    iex> ApaNumber.add_minus_sign("+3")
-    "-3"
-
-    iex> ApaNumber.add_minus_sign("-3")
-    "3"
-
-    iex> ApaNumber.add_minus_sign("-0003.0003e-002")
-    "0003.0003e-002"
+    iex> ApaNumber.pow10(0)
+    1
   """
-  @spec add_minus_sign(binary()) :: binary()
-  def add_minus_sign(<<sign, number_string::binary>>) when sign in '+' do
-    "-" <> number_string
-  end
+  @spec pow10(non_neg_integer()) :: non_neg_integer()
 
-  def add_minus_sign(<<sign, number_string::binary>>) when sign in '-' do
-    number_string
-  end
+  Enum.reduce(0..104, 1, fn int, acc ->
+    def pow10(unquote(int)), do: unquote(acc)
+    defp base10?(unquote(acc)), do: true
+    acc * 10
+  end)
 
-  def add_minus_sign(number_string) do
-    "-" <> number_string
-  end
+  def pow10(num) when num > 104, do: pow10(104) * pow10(num - 104)
+  def pow10(num) when num < 0, do: :error
 end

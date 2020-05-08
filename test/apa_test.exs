@@ -14,47 +14,104 @@ defmodule ApaTest do
     assert_raise ArgumentError, fn -> Apa.sub(1, 2) end
     assert_raise ArgumentError, fn -> Apa.mul(1, 2) end
     assert_raise ArgumentError, fn -> Apa.div(1, 2) end
+    assert_raise ArgumentError, fn -> Apa.add(1.2, 2.3) end
+    assert_raise ArgumentError, fn -> Apa.sub(1.2, 2.3) end
+    assert_raise ArgumentError, fn -> Apa.mul(1.2, 2.3) end
+    assert_raise ArgumentError, fn -> Apa.div(1.2, 2.3) end
+    assert_raise ArgumentError, fn -> Apa.div([1, 2], [2, 3]) end
   end
 
   test "wrong division by 0" do
-    assert "NaN" == Apa.div("1", "0")
-    assert "NaN" == Apa.div("0", "0")
+    assert_raise ArgumentError, fn -> Apa.div("1", "0") end
+    assert_raise ArgumentError, fn -> Apa.div("0", "0") end
   end
 
   test "add test" do
     assert Apa.add("1", "2") == "3"
+    assert Apa.add("-1", "2") == "1"
+    assert Apa.add({123, 0}, {654, 0}) == {777, 0}
+    assert Apa.add({333, 3}, {11_111_111, -1}) == {14_441_111, -1}
   end
 
   test "sub test" do
     assert Apa.sub("3", "2") == "1"
+    assert Apa.sub({3, -21}, {3, -21}) == {0, -21}
   end
 
   test "mul test" do
     assert Apa.mul("3", "2") == "6"
+    assert Apa.mul({3, 0}, {2, 0}) == {6, 0}
+    assert Apa.mul({123, -2}, {45, 2}) == {5535, 0}
   end
 
   test "div test" do
     assert Apa.div("6", "2") == "3"
+    assert Apa.div({6, 0}, {3, 0}) == {2, 0}
+    assert Apa.div({10, 0}, {3, 0}) == {3_333_333_333_333_333_333_333_333_333, -27}
   end
 
   test "ApaNumber.from_string test" do
     assert ApaNumber.from_string("3") == {3, 0}
+    assert ApaNumber.from_string("-3") == {-3, 0}
+    assert ApaNumber.from_string("+3") == {3, 0}
+    assert ApaNumber.from_string("03") == {3, 0}
+    assert ApaNumber.from_string("12345678901234567890123") == {12_345_678_901_234_567_890_123, 0}
+
+    assert ApaNumber.from_string("-12345678901234567890123") ==
+             {-12_345_678_901_234_567_890_123, 0}
+
+    assert ApaNumber.from_string("+12345678901234567890123") ==
+             {12_345_678_901_234_567_890_123, 0}
+
+    assert ApaNumber.from_string("012345678901234567890123") ==
+             {12_345_678_901_234_567_890_123, 0}
+
+    assert ApaNumber.from_string("3e2") == {3, 2}
+    assert ApaNumber.from_string("+3e2") == {3, 2}
+    assert ApaNumber.from_string("+03e2") == {3, 2}
+    assert ApaNumber.from_string("-3e2") == {-3, 2}
+    assert ApaNumber.from_string("-03e2") == {-3, 2}
+    assert ApaNumber.from_string("-03e+02") == {-3, 2}
+    assert ApaNumber.from_string("3e-2") == {3, -2}
+    assert ApaNumber.from_string("3e-02") == {3, -2}
+    assert ApaNumber.from_string("-03e-02") == {-3, -2}
+    assert ApaNumber.from_string("-03E-02") == {-3, -2}
+    assert ApaNumber.from_string("-03E-02 euro") == {-3, -2}
+
+    assert ApaNumber.from_string("-0012345678901234567890123E-02 euro") ==
+             {-12_345_678_901_234_567_890_123, -2}
+
+    assert ApaNumber.from_string("-0012345678901234567890123E02 euro") ==
+             {-12_345_678_901_234_567_890_123, 2}
+
+    assert ApaNumber.from_string("-03.") == {-3, 0}
+    assert ApaNumber.from_string("-03.e") == {-3, 0}
+    assert ApaNumber.from_string("-03.0e") == {-3, 0}
+    assert ApaNumber.from_string("-03.01e") == {-301, -2}
+    assert ApaNumber.from_string("-030.01e") == {-3001, -2}
+    assert ApaNumber.from_string("-30010.01000e-01") == {-3_001_001, -3}
   end
 
   test "ApaNumber.to_string test" do
     assert ApaNumber.to_string({3, 0}) == "3"
+    assert ApaNumber.to_string({3, 0}) == "3"
+  end
+
+  test "ApaNumber.pow10 test" do
+    assert ApaNumber.pow10(3) == 1000
+    assert ApaNumber.pow10(0) == 1
+    assert ApaNumber.pow10(-1) == :error
+
+    assert ApaNumber.pow10(105) ==
+             1_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000
   end
 
   test "ApaNumber.shift_to test" do
     assert ApaNumber.shift_to({3, -1}, -2) == {30, -2}
   end
 
-  test "ApaNumber.add_minus_sign test" do
-    assert ApaNumber.add_minus_sign("3") == "-3"
-  end
-
   test "Apa.add - some random numbers - also with leading and trailing zeros" do
-    for _n <- 1..2 do
+    for _n <- 1..1 do
       left =
         Enum.take(
           StreamData.integer(0..9),
@@ -75,7 +132,7 @@ defmodule ApaTest do
   end
 
   test "elixir_add - some random numbers - also with leading and trailing zeros" do
-    for _n <- 1..2 do
+    for _n <- 1..1 do
       left =
         Enum.take(
           StreamData.integer(0..9),
@@ -288,8 +345,14 @@ defmodule ApaTest do
 
     assert "10" == "2222.001" / "222.2001"
 
-    assert "4.803996494145874505235775423334130118361854870657100757394670069275408183992252107271953952558746062366945316980162297254682795391215837841902139087243471693370187446483540777998857567381640950710429242683886201142208171872141814268287619195112453301102817813419879898684855809965648465178810904957012886595045792694491" ==
+    # assert "4.803996494145874505235775423334130118361854870657100757394670069275408183992252107271953952558746062366945316980162297254682795391215837841902139087243471693370187446483540777998857567381640950710429242683886201142208171872141814268287619195112453301102817813419879898684855809965648465178810904957012886595045792694491" ==
+    #          "17.123" / "3.564324"
+    assert "4.803996494145874505235775" ==
              "17.123" / "3.564324"
+
+    assert "300.33" == "300.11 Euro" + "0.22"
+    assert "3001.23" == "30010.10e-1" + "0.22"
+    assert "3001.23" == "3001.010 Euro" + "0.22"
 
     price = "3.51 Euro"
     quantity = "12"
@@ -333,6 +396,8 @@ defmodule ApaTest do
     assert "55.55" == Apa.add("12.34", "43.21", 4, 2)
     assert "55.55" == Apa.add("12.34", "43.21", 30, 2)
     assert "-55.55" == Apa.add("-12.34", "-43.21", -1, 2)
+
+    assert "0" == ApaNumber.to_string({0, -3})
   end
 
   test "scale tests" do
@@ -375,6 +440,10 @@ defmodule ApaTest do
     assert "-55.55" == Apa.add("-12.34", "-43.21", -1, 2)
 
     assert "-3.33" == Apa.div("-10", "3", -1, 2)
+  end
+
+  test "special div tests" do
+    assert "-333333333333333333333.33" == Apa.div("-1000000000000000000000", "3", -1, 2)
   end
 
   # private helper

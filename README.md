@@ -129,7 +129,146 @@ Could be useful together with [CubDB](https://github.com/lucaong/cubdb) (pure El
 
 ## Cons
 
-Slower performance compared to original Elixir integer or float calculation (see raw performance tests).
+Not heavy tested in production so there are probably many uncovered issues.
+
+Slower performance compared to original Elixir integer or float calculation (see performance comparision in tests and benchee benchmarks in examples).
+
+
+## Installation
+
+  1. Add `apa` to your list of dependencies in `mix.exs`:
+
+  ```elixir
+  def deps do
+    [
+      {:apa, "~> 0.5"}
+    ]
+  end
+  ```
+
+## Config
+
+Default values for precision and scale - you don't need to put it in your config, only if you want to overwrite it.
+
+config/config.exs:
+
+```elixir
+use Mix.Config
+
+# Configures the apa precision and scale defaults
+# scale < 0 (default -1) - no touch on decimal point
+# scale == 0 - always integer
+# scale > 0 - always make a decimal point at scale
+# precision <= 0 - (default -1) - no touch at the precision == arbitrary precision
+# precision > 0 - the total count of significant digits in the whole number
+# you can overwrite the defaults with the  following or ues explicit precision and/or scale
+config :apa,
+  precision_default: -1,
+  scale_default: -1
+  ```
+  
+## Usage
+
+  ```elixir
+  defmodule ApaExample do
+    import Apa
+    import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
+
+    def the_answer() do
+      apa1 = Apa.add("1", "2")
+      apa2 = Apa.sub("3", "2")
+
+      price = "3.50 Euro"
+      quantity = "12"
+      total_string = price * quantity
+
+      IO.puts("The Answer to the Ultimate Question of Life, the Universe, and Everything is: ")
+
+      "1"
+      |> Apa.add("2")
+      |> Apa.add("3")
+      |> Apa.sub("4")
+      |> Apa.add("5")
+      |> Apa.mul("6")
+    end
+  end
+  ```
+
+## Examples (see examples folder too)
+
+```elixir
+iex> Apa.add("0.1", "0.2")
+"0.3"
+iex> Apa.sub("3.0", "0.000000000000000000000000000000000000000000000001")
+"2.999999999999999999999999999999999999999999999999"
+iex> "333.33" |> Apa.add("666.66") |> Apa.sub("111.11")
+"888.88"
+
+iex> "1" |> Apa.add("2") |> Apa.add("3") |> Apa.sub("4") |> Apa.add("5") |> Apa.mul("6")
+"42"
+```
+
+:laughing:
+
+## Performance comparison with Decimal - fortunately it's 'a little' faster and lower memory consumption
+
+```
+Benchmark suite benchee configuration:
+```
+
+```elixir
+inputs = %{
+  "606 Digits Integer as String" =>
+    {123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_011_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_112_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_011_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_112_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901,
+     893_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_011_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_112_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_011_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_112_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_901_234_567_890_123_456_789_012_345_678_999}
+}
+
+bench = %{
+  "Decimal.add() Int" => fn {l, r} ->
+    Decimal.add(%Decimal{sign: 1, coef: l, exp: 0}, %Decimal{sign: 1, coef: r, exp: 0})
+  end,
+  "Apa.add() Int" => fn {l, r} ->
+    Apa.add({l, 0}, {r, 0})
+  end,
+  "Decimal.add() Dec" => fn {l, r} ->
+    Decimal.add(%Decimal{sign: 1, coef: l, exp: -12}, %Decimal{sign: 1, coef: r, exp: 12})
+  end,
+  "Apa.add() Dec" => fn {l, r} ->
+    Apa.add({l, -12}, {r, 12})
+  end
+}
+
+Benchee.run(bench,
+  inputs: inputs,
+  time: 6,
+  warmup: 1,
+  memory_time: 1,
+  print: [fast_warning: false]
+)
+```
+
+```
+##### With input 606 Digits Integer as String #####
+Name                        ips        average  deviation         median         99th %
+Apa.add() Int         2987.35 K        0.33 μs  ±7486.92%           0 μs           1 μs
+Apa.add() Dec          628.08 K        1.59 μs   ±131.47%           2 μs           2 μs
+Decimal.add() Int       46.63 K       21.44 μs    ±26.49%          21 μs          37 μs
+Decimal.add() Dec       43.02 K       23.24 μs    ±25.11%          22 μs          44 μs
+
+Comparison: 
+Apa.add() Int         2987.35 K
+Apa.add() Dec          628.08 K - 4.76x slower +1.26 μs
+Decimal.add() Int       46.63 K - 64.06x slower +21.11 μs
+Decimal.add() Dec       43.02 K - 69.44x slower +22.91 μs
+
+Memory usage statistics:
+
+Name                 Memory usage
+Apa.add() Int           0.0703 KB
+Apa.add() Dec           0.0938 KB - 1.33x memory usage +0.0234 KB
+Decimal.add() Int         2.25 KB - 32.00x memory usage +2.18 KB
+Decimal.add() Dec         1.38 KB - 19.56x memory usage +1.30 KB
+```
 
 ## Precision and Scale
 
@@ -202,83 +341,12 @@ iex> Apa.mul("3.50 Euro", "12 Stück", -1, 2)
   - [x] precision (total count of significant digits)
   - [x] scale (number of digits after the decimal place)
   - [x] config for precision and scale defaults
-  - [ ] Infinity and NaN
+  - [x] NaN and Infinity - (my decision is: Don't use NaN and Infinity - see below)
   - [ ] string format for result
   - [ ] rounding
   - [ ] performance - f.e. benchee check - this pure Elixir implementation looks like fast enough for normal applications (normal means not for number crunching)
 
-## Installation
+## NaN and Infinity
 
-  1. Add `apa` to your list of dependencies in `mix.exs`:
+I don't use NaN and Infinity because I think its more clear and strait forward to handle division by zero with an error/exception, because it makes no sense at all to continue with any operation after a division by zero - see [Wikipedia Division_by_zero](https://en.wikipedia.org/wiki/Division_by_zero). And no other operation in Apa generate a NaN nor an Infinity so I don't use them.
 
-  ```elixir
-  def deps do
-    [
-      {:apa, "~> 0.5"}
-    ]
-  end
-  ```
-
-## Config
-
-default values for precision and scale
-
-config/config.exs:
-
-```elixir
-use Mix.Config
-
-# Configures the apa precision and scale defaults
-# scale < 0 (default -1) - no touch on decimal point
-# scale == 0 - always integer
-# scale > 0 - always make a decimal point at scale
-# precision <= 0 - (default -1) - no touch at the precision == arbitrary precision
-# precision > 0 - the total count of significant digits in the whole number
-# you can overwrite the defaults with the  following or ues explicit precision and/or scale
-config :apa,
-  precision_default: -1,
-  scale_default: -1
-  ```
-  
-## Usage
-
-  ```elixir
-  defmodule ApaExample do
-    import Apa
-    import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
-
-    def the_answer() do
-      apa1 = Apa.add("1", "2")
-      apa2 = Apa.sub("3", "2")
-
-      price = "3.50 Euro"
-      quantity = "12"
-      total_string = price * quantity
-
-      IO.puts("The Answer to the Ultimate Question of Life, the Universe, and Everything is: ")
-
-      "1"
-      |> Apa.add("2")
-      |> Apa.add("3")
-      |> Apa.sub("4")
-      |> Apa.add("5")
-      |> Apa.mul("6")
-    end
-  end
-  ```
-
-## Examples
-
-```elixir
-iex> Apa.add("0.1", "0.2")
-"0.3"
-iex> Apa.sub("3.0", "0.000000000000000000000000000000000000000000000001")
-"2.999999999999999999999999999999999999999999999999"
-iex> "333.33" |> Apa.add("666.66") |> Apa.sub("111.11")
-"888.88"
-
-iex> "1" |> Apa.add("2") |> Apa.add("3") |> Apa.sub("4") |> Apa.add("5") |> Apa.mul("6")
-"42"
-```
-
-:laughing:
