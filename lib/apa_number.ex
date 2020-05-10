@@ -16,62 +16,52 @@ defmodule ApaNumber do
   It works with signs, leading and trailing zeros and additional chars will be ignored.
   If successful, returns a tuple in the form of `{integer_value, exponent}`:
 
-  ApaNumber.from_string("+0003.00e+00000 Dollar")
+  ApaNumber.parse("+0003.00e+00000 Dollar")
   {3, 0}
 
   When the binary cannot be parsed, the atom `:error` will be returned.
 
   The limit only depends on the internal integers - because of Elixir "unlimited" integers  I would say "arbitrary".
 
-  Used elixir source from Float module for parsing - nice source of inspiration! Thank you José!
-
   ## Examples
 
-    iex> ApaNumber.from_string("0003")
+    iex> ApaNumber.parse("0003")
     {3, 0}
 
-    iex> ApaNumber.from_string("+0003")
+    iex> ApaNumber.parse("+0003")
     {3, 0}
 
-    iex> ApaNumber.from_string("-0003")
+    iex> ApaNumber.parse("-0003")
     {-3, 0}
 
-    iex> ApaNumber.from_string("-0000120.1200")
+    iex> ApaNumber.parse("-0000120.1200")
     {-12012, -2}
 
-    iex> ApaNumber.from_string("-0000120.1200")
+    iex> ApaNumber.parse("-0000120.1200")
     {-12012, -2}
 
-    iex> ApaNumber.from_string("-03 Euro")
+    iex> ApaNumber.parse("-03 Euro")
     {-3, 0}
 
-    iex> ApaNumber.from_string("-0003e-2")
+    iex> ApaNumber.parse("-0003e-2")
     {-3, -2}
 
-    iex> ApaNumber.from_string("-3e-0002")
+    iex> ApaNumber.parse("-3e-0002")
     {-3, -2}
 
-    iex> ApaNumber.from_string("3e-12")
+    iex> ApaNumber.parse("3e-12")
     {3, -12}
 
-    iex> ApaNumber.from_string("+0003e+12")
+    iex> ApaNumber.parse("+0003e+12")
     {3, 12}
 
-    iex> ApaNumber.from_string("+0003e+00000")
+    iex> ApaNumber.parse("+0003e+00000")
     {3, 0}
 
-    iex> ApaNumber.from_string("+0003.00e+00000 Dollar")
+    iex> ApaNumber.parse("+0003.00e+00000 Dollar")
     {3, 0}
   """
-  @spec from_string(binary) :: {integer, integer} | :error
-  def from_string(binary) do
-    parse(binary)
-  end
-
-  ###################################################################################################
-  # Parsing
-  ###################################################################################################
-  @spec parse(binary) :: {integer, integer} | :error
+  @spec parse(binary) :: {integer(), integer()} | :error
   def parse("+" <> rest) when byte_size(rest) + 1 > @parse_digit_memory_speed_border do
     parse_unsigned_decimal(rest)
   end
@@ -150,6 +140,7 @@ defmodule ApaNumber do
 
   ###################################################################################################
   # Apa version - with more speed for less then 22 digits an much less memory consumption
+  # Todo: refactor!!! - to complex and not very nice and readable
   ###################################################################################################
   defp parse_unsigned(bin) do
     {int, _int_len, int_trailing_zeros, int_rest} = parse_digits(bin)
@@ -325,8 +316,6 @@ defmodule ApaNumber do
   end
 
   defp scale_up_integer(int_string, scale) when scale > 0 do
-    # Todo: check speed with benchee String.duplicate/2
-    # maybe better :lists.duplicate(scale, ?0)
     scale_zeros = String.duplicate("0", scale)
     "#{int_string}.#{scale_zeros}"
   end
@@ -373,6 +362,7 @@ defmodule ApaNumber do
   end
 
   defp to_string_decimals_list({list, list_len}, exp) do
+    # Todo: check if optimize here because String.duplicate is 5.49x faster!!!
     '0.' ++ :lists.duplicate(-(list_len + exp), ?0) ++ list
   end
 

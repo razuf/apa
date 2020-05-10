@@ -106,7 +106,7 @@ end
   name: "Apple",
   price: 3,
 }
-cart_total = Decimal.to_string(Decimal.mult(Decimal.new(product.price), Decimal.new(cart_quantity)))
+cart_total = Decimal.to_string(Decimal.mult(product.price, cart_quantity))
 ```
 
 with Apa:
@@ -172,7 +172,7 @@ config :apa,
   ```elixir
   defmodule ApaExample do
     import Apa
-    import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
+    import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1, abs: 1]
 
     def the_answer() do
       apa1 = Apa.add("1", "2")
@@ -342,9 +342,10 @@ iex> Apa.mul("3.50 Euro", "12 Stück", -1, 2)
   - [x] scale (number of digits after the decimal place)
   - [x] config for precision and scale defaults
   - [x] NaN and Infinity - (my decision is: Don't use NaN and Infinity - see below)
-  - [ ] string format for result
+  - [x] performance - f.e. benchee check - this pure Elixir implementation looks like fast enough for normal applications (normal means not for number crunching)
+  - [x] string format for result - it's possible for some cases with precision and scale (may be later expansion)
+  - [ ] parse int, float and benchee testing
   - [ ] rounding
-  - [ ] performance - f.e. benchee check - this pure Elixir implementation looks like fast enough for normal applications (normal means not for number crunching)
 
 ## NaN and Infinity
 

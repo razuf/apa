@@ -4,20 +4,16 @@ defmodule ApaTest do
   """
   use ExUnit.Case
   import Apa
-  import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
+  import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1, abs: 1]
 
   doctest Apa
   doctest ApaNumber
 
-  test "wrong input - no strings" do
-    assert_raise ArgumentError, fn -> Apa.add(1, 2) end
-    assert_raise ArgumentError, fn -> Apa.sub(1, 2) end
-    assert_raise ArgumentError, fn -> Apa.mul(1, 2) end
-    assert_raise ArgumentError, fn -> Apa.div(1, 2) end
-    assert_raise ArgumentError, fn -> Apa.add(1.2, 2.3) end
-    assert_raise ArgumentError, fn -> Apa.sub(1.2, 2.3) end
-    assert_raise ArgumentError, fn -> Apa.mul(1.2, 2.3) end
-    assert_raise ArgumentError, fn -> Apa.div(1.2, 2.3) end
+  test "wrong input" do
+    assert_raise ArgumentError, fn -> Apa.parse([1, 2, 3]) end
+    assert_raise ArgumentError, fn -> Apa.add([1, 2], [2, 3]) end
+    assert_raise ArgumentError, fn -> Apa.sub([1, 2], [2, 3]) end
+    assert_raise ArgumentError, fn -> Apa.mul([1, 2], [2, 3]) end
     assert_raise ArgumentError, fn -> Apa.div([1, 2], [2, 3]) end
   end
 
@@ -29,67 +25,102 @@ defmodule ApaTest do
   test "add test" do
     assert Apa.add("1", "2") == "3"
     assert Apa.add("-1", "2") == "1"
-    assert Apa.add({123, 0}, {654, 0}) == {777, 0}
-    assert Apa.add({333, 3}, {11_111_111, -1}) == {14_441_111, -1}
+    assert Apa.add({123, 0}, {654, 0}) == "777"
+    assert ApaAdd.bc_add_apa_number({123, 0}, {654, 0}) == {777, 0}
+    assert ApaAdd.bc_add_apa_number({333, 3}, {11_111_111, -1}) == {14_441_111, -1}
   end
 
   test "sub test" do
     assert Apa.sub("3", "2") == "1"
-    assert Apa.sub({3, -21}, {3, -21}) == {0, -21}
+    assert Apa.sub({3, -21}, {3, -21}) == "0"
+    assert ApaSub.bc_sub_apa_number({3, -21}, {3, -21}) == {0, -21}
   end
 
   test "mul test" do
     assert Apa.mul("3", "2") == "6"
-    assert Apa.mul({3, 0}, {2, 0}) == {6, 0}
-    assert Apa.mul({123, -2}, {45, 2}) == {5535, 0}
+    assert Apa.mul({3, 0}, {2, 0}) == "6"
+    assert ApaMul.bc_mul_apa_number({3, 0}, {2, 0}) == {6, 0}
+    assert ApaMul.bc_mul_apa_number({123, -2}, {45, 2}) == {5535, 0}
   end
 
   test "div test" do
     assert Apa.div("6", "2") == "3"
-    assert Apa.div({6, 0}, {3, 0}) == {2, 0}
-    assert Apa.div({10, 0}, {3, 0}) == {3_333_333_333_333_333_333_333_333_333, -27}
+    assert Apa.div({6, 0}, {3, 0}) == "2"
+    assert ApaDiv.bc_div_apa_number({6, 0}, {3, 0}) == {2, 0}
+
+    assert ApaDiv.bc_div_apa_number({10, 0}, {3, 0}) ==
+             {3_333_333_333_333_333_333_333_333_333, -27}
   end
 
-  test "ApaNumber.from_string test" do
-    assert ApaNumber.from_string("3") == {3, 0}
-    assert ApaNumber.from_string("-3") == {-3, 0}
-    assert ApaNumber.from_string("+3") == {3, 0}
-    assert ApaNumber.from_string("03") == {3, 0}
-    assert ApaNumber.from_string("12345678901234567890123") == {12_345_678_901_234_567_890_123, 0}
+  test "Apa.new test" do
+    assert Apa.new("3") == {3, 0}
+    assert Apa.new(3) == {3, 0}
+    assert Apa.new(3.21) == {321, -2}
+    assert Apa.new({3, 0}) == {3, 0}
+  end
 
-    assert ApaNumber.from_string("-12345678901234567890123") ==
+  test "Apa.cast test" do
+    assert Apa.cast("3") == {:ok, {3, 0}}
+    assert Apa.cast(3) == {:ok, {3, 0}}
+    assert Apa.cast(3.21) == {:ok, {321, -2}}
+    assert Apa.cast({3, 0}) == {:ok, {3, 0}}
+  end
+
+  test "Apa.parse test" do
+    assert Apa.parse("3") == {3, 0}
+    assert Apa.parse(3) == {3, 0}
+    assert Apa.parse(3.21) == {321, -2}
+    assert Apa.parse({3, 0}) == {3, 0}
+  end
+
+  test "Apa.from_integer test" do
+    assert Apa.from_integer(3) == {3, 0}
+  end
+
+  test "Apa.from_float test" do
+    assert Apa.from_float(3.21) == {321, -2}
+  end
+
+  test "Apa.from_string test" do
+    assert Apa.from_string("3") == {3, 0}
+    assert Apa.from_string("-3") == {-3, 0}
+    assert Apa.from_string("+3") == {3, 0}
+    assert Apa.from_string("03") == {3, 0}
+    assert Apa.from_string("12345678901234567890123") == {12_345_678_901_234_567_890_123, 0}
+
+    assert Apa.from_string("-12345678901234567890123") ==
              {-12_345_678_901_234_567_890_123, 0}
 
-    assert ApaNumber.from_string("+12345678901234567890123") ==
+    assert Apa.from_string("+12345678901234567890123") ==
              {12_345_678_901_234_567_890_123, 0}
 
-    assert ApaNumber.from_string("012345678901234567890123") ==
+    assert Apa.from_string("012345678901234567890123") ==
              {12_345_678_901_234_567_890_123, 0}
 
-    assert ApaNumber.from_string("3e2") == {3, 2}
-    assert ApaNumber.from_string("+3e2") == {3, 2}
-    assert ApaNumber.from_string("+03e2") == {3, 2}
-    assert ApaNumber.from_string("-3e2") == {-3, 2}
-    assert ApaNumber.from_string("-03e2") == {-3, 2}
-    assert ApaNumber.from_string("-03e+02") == {-3, 2}
-    assert ApaNumber.from_string("3e-2") == {3, -2}
-    assert ApaNumber.from_string("3e-02") == {3, -2}
-    assert ApaNumber.from_string("-03e-02") == {-3, -2}
-    assert ApaNumber.from_string("-03E-02") == {-3, -2}
-    assert ApaNumber.from_string("-03E-02 euro") == {-3, -2}
+    assert Apa.from_string("3e2") == {3, 2}
+    assert Apa.from_string("+3e2") == {3, 2}
+    assert Apa.from_string("+03e2") == {3, 2}
+    assert Apa.from_string("-3e2") == {-3, 2}
+    assert Apa.from_string("-03e2") == {-3, 2}
+    assert Apa.from_string("-03e+02") == {-3, 2}
+    assert Apa.from_string("3e-2") == {3, -2}
+    assert Apa.from_string("3e-02") == {3, -2}
+    assert Apa.from_string("-03e-02") == {-3, -2}
+    assert Apa.from_string("-03E-02") == {-3, -2}
+    assert Apa.from_string("-03E-02 euro") == {-3, -2}
 
-    assert ApaNumber.from_string("-0012345678901234567890123E-02 euro") ==
+    assert Apa.from_string("-0012345678901234567890123E-02 euro") ==
              {-12_345_678_901_234_567_890_123, -2}
 
-    assert ApaNumber.from_string("-0012345678901234567890123E02 euro") ==
+    assert Apa.from_string("-0012345678901234567890123E02 euro") ==
              {-12_345_678_901_234_567_890_123, 2}
 
-    assert ApaNumber.from_string("-03.") == {-3, 0}
-    assert ApaNumber.from_string("-03.e") == {-3, 0}
-    assert ApaNumber.from_string("-03.0e") == {-3, 0}
-    assert ApaNumber.from_string("-03.01e") == {-301, -2}
-    assert ApaNumber.from_string("-030.01e") == {-3001, -2}
-    assert ApaNumber.from_string("-30010.01000e-01") == {-3_001_001, -3}
+    assert Apa.from_string("-03.") == {-3, 0}
+    assert Apa.from_string("-03.e") == {-3, 0}
+    assert Apa.from_string("-03.0e") == {-3, 0}
+    assert Apa.from_string("-03.01e") == {-301, -2}
+    assert Apa.from_string("-030.01e") == {-3001, -2}
+    assert Apa.from_string("-30010.01000e-01") == {-3_001_001, -3}
   end
 
   test "ApaNumber.to_string test" do

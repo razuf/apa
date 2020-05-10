@@ -11,9 +11,11 @@ defmodule ApaComp do
   """
   @spec bc_comp(String.t(), String.t(), integer(), integer()) :: integer() | Exception
   def bc_comp(left, right, precision, scale) do
+    diff = Apa.sub(left, right, precision, scale)
+
     cond do
-      ApaNumber.from_string(Apa.sub(left, right, precision, scale)) == {0, 0} -> 0
-      String.first(Apa.sub(left, right, precision, scale)) == "-" -> -1
+      Apa.from_string(diff) == {0, 0} -> 0
+      String.first(diff) == "-" -> -1
       true -> 1
     end
   end

@@ -1,7 +1,7 @@
 defmodule ApaExampleTest do
   use ExUnit.Case
   import Apa
-  import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
+  import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1, abs: 1]
   doctest ApaExample
 
   test "the answer" do
