@@ -1,6 +1,10 @@
 defmodule ApaDecimalTest do
   use ExUnit.Case, async: true
 
+  @doc """
+  Tests from Decimal package adapted to Apa.
+  """
+
   # import Apa
   # import Kernel, except: [+: 2, -: 2, *: 2, /: 2, to_string: 1]
 

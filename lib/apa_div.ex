@@ -18,7 +18,7 @@ defmodule ApaDiv do
 
     # Todo: check to use precision/scale to stop recursion
     # bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, precision, scale)
-    ApaNumber.to_string(
+    Apa.to_string(
       bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}),
       precision,
       scale

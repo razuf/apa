@@ -338,14 +338,15 @@ iex> Apa.mul("3.50 Euro", "12 Stück", -1, 2)
   - [x] basic operations (`mul`)
   - [x] basic operations (`div`)
   - [x] comparison (`comp`)
+  - [x] absolute value (`abs`)
   - [x] precision (total count of significant digits)
   - [x] scale (number of digits after the decimal place)
   - [x] config for precision and scale defaults
   - [x] NaN and Infinity - (my decision is: Don't use NaN and Infinity - see below)
   - [x] performance - f.e. benchee check - this pure Elixir implementation looks like fast enough for normal applications (normal means not for number crunching)
   - [x] string format for result - it's possible for some cases with precision and scale (may be later expansion)
-  - [ ] parse int, float and benchee testing
-  - [ ] rounding
+  - [x] parse int, float and benchee testing
+  - [ ] rounding 
 
 ## NaN and Infinity
 

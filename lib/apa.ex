@@ -40,6 +40,7 @@ defmodule Apa do
 
   @doc """
   Creates a new ApaNumber tuple from an integer, string, float, or existing ApaNumber.
+  cast/1 will returns {:ok, tuple} or {:error, term} - in contrast to new/1
   See specific functions for documentation:
   from_string/1
   from_float/1
@@ -101,11 +102,11 @@ defmodule Apa do
   end
 
   def parse(number) when is_integer(number) do
-    from_integer(number)
+    Apa.from_integer(number)
   end
 
   def parse(number) when is_float(number) do
-    from_float(number)
+    Apa.from_float(number)
   end
 
   def parse({int, exp}) when is_integer(int) and is_integer(exp) do
@@ -118,21 +119,19 @@ defmodule Apa do
     ")
   end
 
-  # @spec parse(number) :: {integer, integer} | :error
-  # def parse(number) do
-  #   ApaNumber.parse(number)
-  # end
-
   @doc """
   Creates a new ApaNumber tuple from an integer.
-  signed integer are parsed.
+  Signed integer are parsed correctly.
 
   ## Examples
 
     iex> Apa.parse(3)
     {3, 0}
+
+    iex> Apa.parse(-3)
+    {-3, 0}
   """
-  @spec from_integer(integer()) :: {integer(), integer()} | :error
+  @spec from_integer(integer()) :: {integer(), 0} | :error
   def from_integer(int) when is_integer(int) do
     {int, 0}
   end
@@ -143,8 +142,8 @@ defmodule Apa do
 
   @doc """
   Creates a new ApaNumber tuple from an float.
-  Float first converted via Kernel.to_string/1 and then parsedIO.inspect(binding(), label: "### binding")
-  Thats includes a precision limit during Kernel.to_string/1 - please look at docs there.
+  Float first converted via Float.to_string/1 and then parsed.
+  Thats includes a precision limit during Float.to_string/1 - please look at docs there.
 
   ## Examples
 
@@ -153,7 +152,7 @@ defmodule Apa do
   """
   @spec from_float(float()) :: {integer(), integer()} | :error
   def from_float(float) when is_float(float) do
-    Apa.parse(Kernel.to_string(float))
+    Apa.parse(Float.to_string(float))
   end
 
   def from_float(_float) do
@@ -220,6 +219,7 @@ defmodule Apa do
 
   @doc """
   Output an ApaNumber tuple as a binary (number string).
+  Precision and scale can be used to format or limit the output string.
 
   ## Examples
 
@@ -229,10 +229,24 @@ defmodule Apa do
     iex> Apa.to_string({-3, -1})
     "-0.3"
 
+    iex> Apa.to_string({-3, 0})
+    "-3"
+
+    iex> Apa.to_string({3, 3})
+    "3000"
+
+    iex> Apa.to_string({-12012, -2})
+    "-120.12"
+
+    iex> Apa.to_string({-3997, -6})
+    "-0.003997"
+
   """
-  @spec to_string({integer(), integer()}) :: binary() | :error
-  def to_string({int, exp}) do
-    ApaNumber.to_string({int, exp})
+  @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
+  def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
+
+  def to_string({int, exp}, precision, scale) do
+    ApaNumber.to_string({int, exp}, precision, scale)
   end
 
   @doc """
@@ -492,7 +506,7 @@ defmodule Apa do
     )
   end
 
-  # @spec number / number :: float
+  @spec number / number :: float
   def left / right do
     Kernel./(left, right)
   end
@@ -583,10 +597,17 @@ defmodule Apa do
 
     iex> Apa.abs({-3, -3})
     {3, -3}
+
+    iex> Apa.abs({+3, -3})
+    {3, -3}
+
+    iex> abs(-3)
+    3
+
   """
   @spec abs({integer(), integer()}) :: {integer(), integer()}
   def abs({int, exp}) when is_integer(int) and is_integer(exp) do
-    {abs(int), exp}
+    ApaAbs.bc_abs({int, exp})
   end
 
   @spec abs(integer()) :: integer()

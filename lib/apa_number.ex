@@ -1,13 +1,7 @@
 defmodule ApaNumber do
   @moduledoc """
-  APA : Arbitrary Precision Arithmetic - Number String helper - ApaNumber.
-
-  Parser to handle number string inputs
-  convert any number string to a tuple of 2 integers:
-  {integer_value, exp}
+  APA : Arbitrary Precision Arithmetic - internal helper functions - ApaNumber.
   """
-  @precision_default Application.get_env(:apa, :precision_default, -1)
-  @scale_default Application.get_env(:apa, :scale_default, -1)
   @parse_digit_memory_speed_border Application.get_env(:apa, :parse_digit_memory_speed_border, 22)
 
   @doc """
@@ -21,7 +15,7 @@ defmodule ApaNumber do
 
   When the binary cannot be parsed, the atom `:error` will be returned.
 
-  The limit only depends on the internal integers - because of Elixir "unlimited" integers  I would say "arbitrary".
+  The limit only depends on the internal integers - because of Elixir "unlimited" integers I would say "arbitrary".
 
   ## Examples
 
@@ -220,20 +214,19 @@ defmodule ApaNumber do
   defp parse_float("." <> rest), do: parse_digits(rest)
   defp parse_float(bin), do: {:error, 0, 0, bin}
 
+  defp parse_exp(<<e, sign, rest::binary>>) when e in [?e, ?E] and sign == ?- do
+    {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
+    {-1 * exp, exp_rest}
+  end
+
+  defp parse_exp(<<e, sign, rest::binary>>) when e in [?e, ?E] and sign == ?+ do
+    {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
+    {exp, exp_rest}
+  end
+
   defp parse_exp(<<e, rest::binary>>) when e in [?e, ?E] do
-    case rest do
-      <<sign, rest::binary>> when sign in [?-] ->
-        {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
-        {-1 * exp, exp_rest}
-
-      <<sign, rest::binary>> when sign in [?+] ->
-        {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
-        {exp, exp_rest}
-
-      _ ->
-        {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
-        {exp, exp_rest}
-    end
+    {exp, _exp_len, _exp_trailing_zeros, exp_rest} = parse_digits(rest)
+    {exp, exp_rest}
   end
 
   defp parse_exp(bin) do
@@ -269,24 +262,9 @@ defmodule ApaNumber do
 
   ## Examples
 
-    iex> ApaNumber.to_string({3, 0})
+    iex> ApaNumber.to_string({3, 0}, -1, -1)
     "3"
-
-    iex> ApaNumber.to_string({-3, 0})
-    "-3"
-
-    iex> ApaNumber.to_string({3, 3})
-    "3000"
-
-    iex> ApaNumber.to_string({-12012, -2})
-    "-120.12"
-
-    iex> ApaNumber.to_string({-3997, -6})
-    "-0.003997"
   """
-  @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
-  def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
-
   def to_string({int_value, _exp}, precision, scale) when int_value == 0 do
     to_string_integer({0, 0}, precision, scale)
   end
@@ -362,7 +340,7 @@ defmodule ApaNumber do
   end
 
   defp to_string_decimals_list({list, list_len}, exp) do
-    # Todo: check if optimize here because String.duplicate is 5.49x faster!!!
+    # Todo: check for optimizing here because String.duplicate is 5.49x faster!!!
     '0.' ++ :lists.duplicate(-(list_len + exp), ?0) ++ list
   end
 
@@ -374,7 +352,7 @@ defmodule ApaNumber do
   Shifts an ApaNumber to another decimal point
   to work with the intended integer calculation of two numbers with the same decimal point
   this operation do not change the mathematical value:
-  ApaNumber.to_string({2, -1}) == "0.2" ~math-equal~ ApaNumber.to_string({20, -2}) == "0.20"
+  Apa.to_string({2, -1}) == "0.2" ~math-equal~ Apa.to_string({20, -2}) == "0.20"
   and always shift_decimal_point > exp because fillup with zeros
   reduce non existing zeros is not possible and not necessary to implement
   returns the shifted ApaNumber tupel or if not possible to shift the input tupel

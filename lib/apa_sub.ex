@@ -13,7 +13,7 @@ defmodule ApaSub do
     {right_int, right_exp} = Apa.new(right)
 
     bc_sub_apa_number({left_int, left_exp}, {right_int, right_exp})
-    |> ApaNumber.to_string(precision, scale)
+    |> Apa.to_string(precision, scale)
   end
 
   @spec bc_sub_apa_number({integer(), integer()}, {integer(), integer()}) ::
