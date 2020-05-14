@@ -51,8 +51,8 @@ defmodule Apa do
     iex> Apa.cast("3")
     {:ok, {3, 0}}
 
-    iex> Apa.cast(:test_error)
-    {:error, :test_error}
+    iex> Apa.cast("test_error")
+    {:error, "test_error"}
   """
   @spec cast(binary()) :: {:ok, {integer(), integer()}} | {:error, term()}
   def cast(number) when is_binary(number) do
@@ -240,7 +240,6 @@ defmodule Apa do
 
     iex> Apa.to_string({-3997, -6})
     "-0.003997"
-
   """
   @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
   def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
@@ -603,7 +602,6 @@ defmodule Apa do
 
     iex> abs(-3)
     3
-
   """
   @spec abs({integer(), integer()}) :: {integer(), integer()}
   def abs({int, exp}) when is_integer(int) and is_integer(exp) do

@@ -2,7 +2,11 @@ defmodule ApaNumber do
   @moduledoc """
   APA : Arbitrary Precision Arithmetic - internal helper functions - ApaNumber.
   """
-  @parse_digit_memory_speed_border Application.get_env(:apa, :parse_digit_memory_speed_border, 22)
+  @parse_digit_memory_speed_border Application.get_env(
+                                     :apa,
+                                     :parse_digit_memory_speed_border,
+                                     42
+                                   )
 
   @doc """
   Parses a binary (number string) into an ApaNumber tuple.
@@ -134,59 +138,40 @@ defmodule ApaNumber do
 
   ###################################################################################################
   # Apa version - with more speed for less then 22 digits an much less memory consumption
-  # Todo: refactor!!! - to complex and not very nice and readable
   ###################################################################################################
   defp parse_unsigned(bin) do
     {int, _int_len, int_trailing_zeros, int_rest} = parse_digits(bin)
+    {float, float_len, float_trailing_zeros, float_rest} = parse_float(int_rest)
+    {exp, _exp_rest} = parse_exp(float_rest)
 
-    if int == :error do
-      :error
-    else
-      if int_rest == "" do
-        parse_unsigned_integer(int, int_trailing_zeros)
-      else
-        {float, float_len, float_trailing_zeros, float_rest} = parse_float(int_rest)
-
-        if float_rest == "" do
-          if float == :error do
-            parse_unsigned_integer(int, int_trailing_zeros)
-          else
-            float = div(float, ApaNumber.pow10(float_trailing_zeros))
-
-            if float == 0 do
-              parse_unsigned_integer(int, int_trailing_zeros)
-            else
-              parse_unsigned_float(int, float, float_len, float_trailing_zeros)
-            end
-          end
-        else
-          {exp, _exp_rest} = parse_exp(float_rest)
-
-          if exp == :error do
-            if float == :error do
-              parse_unsigned_integer(int, int_trailing_zeros)
-            else
-              if float == 0 do
-                {int, int_trailing_zeros}
-              else
-                parse_unsigned_float(int, float, float_len, float_trailing_zeros)
-              end
-            end
-          else
-            if float == :error do
-              parse_unsigned_integer(int, int_trailing_zeros, exp)
-            else
-              if float == 0 do
-                parse_unsigned_integer(int, int_trailing_zeros, exp)
-              else
-                parse_unsigned_float(int, float, float_len, float_trailing_zeros, exp)
-              end
-            end
-          end
-        end
-      end
-    end
+    parse_unsigned(int, int_trailing_zeros, float, float_len, float_trailing_zeros, exp)
   end
+
+  defp parse_unsigned(int, _int_trailing_zeros, _float, _float_len, _float_trailing_zeros, _exp)
+       when int == :error do
+    :error
+  end
+
+  defp parse_unsigned(int, int_trailing_zeros, float, _float_len, _float_trailing_zeros, exp)
+       when (exp == :error and float == :error) or (exp == :error and float == 0) do
+    parse_unsigned_integer(int, int_trailing_zeros)
+  end
+
+  defp parse_unsigned(int, _int_trailing_zeros, float, float_len, float_trailing_zeros, exp)
+       when exp == :error do
+    parse_unsigned_float(int, float, float_len, float_trailing_zeros)
+  end
+
+  defp parse_unsigned(int, int_trailing_zeros, float, _float_len, _float_trailing_zeros, exp)
+       when float == :error or float == 0 do
+    parse_unsigned_integer(int, int_trailing_zeros, exp)
+  end
+
+  defp parse_unsigned(int, _int_trailing_zeros, float, float_len, float_trailing_zeros, exp) do
+    parse_unsigned_float(int, float, float_len, float_trailing_zeros, exp)
+  end
+
+  ###
 
   defp parse_unsigned_integer(int, int_trailing_zeros) do
     int = div(int, ApaNumber.pow10(int_trailing_zeros))
@@ -301,7 +286,7 @@ defmodule ApaNumber do
   ########## to_string_decimals  exp < 0
   defp to_string_decimals({int_value, exp}, _precision, scale) when scale == 0 do
     int_value
-    |> div(ApaNumber.pow10(abs(scale + exp)))
+    |> div(ApaNumber.pow10(Kernel.abs(exp)))
     |> Integer.to_charlist()
     |> IO.iodata_to_binary()
   end
@@ -325,9 +310,10 @@ defmodule ApaNumber do
   end
 
   defp to_string_decimals({int_value, exp}, _precision, scale) when scale + exp < 0 do
-    shrink = abs(scale + exp)
+    shrink = Kernel.abs(scale + exp)
 
-    div(int_value, ApaNumber.pow10(shrink))
+    int_value
+    |> div(ApaNumber.pow10(shrink))
     |> Integer.to_charlist()
     |> list_and_length()
     |> to_string_decimals_list(-scale)
