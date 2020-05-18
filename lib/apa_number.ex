@@ -106,7 +106,7 @@ defmodule ApaNumber do
       int = if int == [], do: '0', else: int
       exp = if exp == [], do: '0', else: exp
 
-      {List.to_integer(int ++ float), List.to_integer(exp) - length(float)}
+      {List.to_integer(int ++ float), List.to_integer(exp) - Kernel.length(float)}
     end
   end
 
@@ -137,7 +137,8 @@ defmodule ApaNumber do
   end
 
   ###################################################################################################
-  # Apa version - with more speed for less then 22 digits an much less memory consumption
+  # Apa version - with more speed for less then @parse_digit_memory_speed_border digits an much less memory consumption
+  # see @parse_digit_memory_speed_border in docs
   ###################################################################################################
   defp parse_unsigned(bin) do
     {int, _int_len, int_trailing_zeros, int_rest} = parse_digits(bin)
@@ -182,6 +183,8 @@ defmodule ApaNumber do
     int = div(int, ApaNumber.pow10(int_trailing_zeros))
     {int, int_trailing_zeros + exp}
   end
+
+  ###
 
   defp parse_unsigned_float(int, float, float_len, float_trailing_zeros) do
     int_value = int * ApaNumber.pow10(float_len - float_trailing_zeros) + float
@@ -228,8 +231,8 @@ defmodule ApaNumber do
        when digit in ?0..?9 do
     trailing_zeros = if digit == 48 and acc > 0, do: trailing_zeros + 1, else: 0
 
-    # unbelievable but mult by 10 is so time expensive here !!! there is a difference of 280 K in 5 sec
-    # maybe because of recursion
+    # unbelievable but mult by 10 is so time expensive here !!!
+    # there is a difference of 280 K in 5 sec between + and *
     # 404.86 K in 5 sec (benchee)
     # parse_digits(rest, acc + 10 + (digit - 48), trailing_zeros, len + 1)
 
@@ -267,7 +270,28 @@ defmodule ApaNumber do
   end
 
   ########## to_string_integer  exp >= 0
-  defp to_string_integer({int_value, exp}, _precision, scale) do
+  defp to_string_integer({int_value, exp}, precision, scale) when precision <= 0 do
+    to_string_integer({int_value, exp}, scale)
+  end
+
+  defp to_string_integer({int_value, exp}, precision, scale) when precision > 0 do
+    # Todo: check optimization
+    len =
+      Kernel.abs(int_value)
+      |> Integer.to_charlist()
+      |> Kernel.length()
+
+    diff = len - precision
+
+    if diff > 0 do
+      int_value = div(int_value, ApaNumber.pow10(diff))
+      to_string_integer({int_value, exp + diff}, scale)
+    else
+      to_string_integer({int_value, exp}, scale)
+    end
+  end
+
+  defp to_string_integer({int_value, exp}, scale) do
     {shifted_int, 0} = shift_to({int_value, exp}, 0)
 
     Integer.to_string(shifted_int)
@@ -284,14 +308,37 @@ defmodule ApaNumber do
   end
 
   ########## to_string_decimals  exp < 0
-  defp to_string_decimals({int_value, exp}, _precision, scale) when scale == 0 do
+  defp to_string_decimals({int_value, exp}, precision, scale) when precision <= 0 do
+    to_string_decimals({int_value, exp}, scale)
+  end
+
+  defp to_string_decimals({int_value, exp}, precision, scale) when precision > 0 do
+    # Todo: check for optimization
+    len =
+      Kernel.abs(int_value)
+      |> Integer.to_charlist()
+      |> Kernel.length()
+
+    diff = len - precision
+
+    if diff > 0 do
+      int_value = div(int_value, ApaNumber.pow10(diff))
+      {shifted_int, 0} = shift_to({int_value, diff}, 0)
+
+      to_string_decimals({shifted_int, exp}, scale)
+    else
+      to_string_decimals({int_value, exp}, scale)
+    end
+  end
+
+  defp to_string_decimals({int_value, exp}, scale) when scale == 0 do
     int_value
     |> div(ApaNumber.pow10(Kernel.abs(exp)))
     |> Integer.to_charlist()
     |> IO.iodata_to_binary()
   end
 
-  defp to_string_decimals({int_value, exp}, _precision, scale) when scale < 0 do
+  defp to_string_decimals({int_value, exp}, scale) when scale < 0 do
     int_value
     |> Integer.to_charlist()
     |> list_and_length()
@@ -299,7 +346,7 @@ defmodule ApaNumber do
     |> IO.iodata_to_binary()
   end
 
-  defp to_string_decimals({int_value, exp}, _precision, scale) when scale + exp >= 0 do
+  defp to_string_decimals({int_value, exp}, scale) when scale + exp >= 0 do
     zeros = scale + exp
 
     (int_value * ApaNumber.pow10(zeros))
@@ -309,7 +356,7 @@ defmodule ApaNumber do
     |> IO.iodata_to_binary()
   end
 
-  defp to_string_decimals({int_value, exp}, _precision, scale) when scale + exp < 0 do
+  defp to_string_decimals({int_value, exp}, scale) when scale + exp < 0 do
     shrink = Kernel.abs(scale + exp)
 
     int_value
@@ -331,7 +378,7 @@ defmodule ApaNumber do
   end
 
   defp list_and_length(list) do
-    {list, length(list)}
+    {list, Kernel.length(list)}
   end
 
   @doc """
@@ -376,34 +423,37 @@ defmodule ApaNumber do
     counted_zeros = count_trailing_zeros(int_value)
     diff = shift_decimal_point - exp
 
-    if counted_zeros > 0 and counted_zeros >= diff do
-      new_int = remove_number_of_zeros(int_value, diff)
-      {new_int, shift_decimal_point}
-    else
-      int_value = int_value * pow10(abs(diff))
-      {int_value, shift_decimal_point}
-    end
+    shift_to(int_value, shift_decimal_point, counted_zeros, diff)
   end
 
-  ### helper
+  defp shift_to(int_value, shift_decimal_point, counted_zeros, diff)
+       when counted_zeros > 0 and counted_zeros >= diff do
+    {remove_number_of_zeros(int_value, diff), shift_decimal_point}
+  end
+
+  defp shift_to(int_value, shift_decimal_point, _counted_zeros, diff) do
+    int_value = int_value * pow10(abs(diff))
+    {int_value, shift_decimal_point}
+  end
 
   defp count_trailing_zeros(int_value, acc \\ 0)
 
   defp count_trailing_zeros(0, acc), do: acc
 
   defp count_trailing_zeros(rest, acc) do
-    if rem(rest, 10) == 0 do
-      count_trailing_zeros(div(rest, 10), acc + 1)
-    else
-      count_trailing_zeros(0, acc)
+    # Todo: check for optimization
+    case Kernel.rem(rest, 10) do
+      0 -> count_trailing_zeros(div(rest, 10), acc + 1)
+      _ -> count_trailing_zeros(0, acc)
     end
   end
 
   defp remove_number_of_zeros(int_value, 0), do: int_value
 
   defp remove_number_of_zeros(rest_int, acc) do
-    if rem(rest_int, 10) == 0 do
-      remove_number_of_zeros(div(rest_int, 10), acc - 1)
+    # Todo: check for optimization
+    case Kernel.rem(rest_int, 10) do
+      0 -> remove_number_of_zeros(div(rest_int, 10), acc - 1)
     end
   end
 
@@ -419,14 +469,28 @@ defmodule ApaNumber do
     iex> ApaNumber.pow10(0)
     1
   """
-  @spec pow10(non_neg_integer()) :: non_neg_integer()
+  @spec pow10(non_neg_integer()) :: non_neg_integer() | :error
+  def pow10(num) when num < 0, do: :error
 
-  Enum.reduce(0..104, 1, fn int, acc ->
-    def pow10(unquote(int)), do: unquote(acc)
-    defp base10?(unquote(acc)), do: true
-    acc * 10
-  end)
+  @spec base10?(non_neg_integer()) :: boolean() | :error
+  def base10?(num) when num < 0, do: :error
+
+  pow10_max =
+    Enum.reduce(0..104, 1, fn int, acc ->
+      def pow10(unquote(int)), do: unquote(acc)
+      def base10?(unquote(acc)), do: true
+      acc * 10
+    end)
 
   def pow10(num) when num > 104, do: pow10(104) * pow10(num - 104)
-  def pow10(num) when num < 0, do: :error
+
+  def base10?(num) when num >= unquote(pow10_max) do
+    if Kernel.rem(num, unquote(pow10_max)) == 0 do
+      base10?(Kernel.div(num, unquote(pow10_max)))
+    else
+      false
+    end
+  end
+
+  def base10?(_num), do: false
 end

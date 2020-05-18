@@ -8,6 +8,7 @@ inputs = %{
 }
 
 bench = %{
+  # To String Convert with standard precision and scale
   "Decimal.to_string() Int" => fn {l, r} ->
     Decimal.to_string(%Decimal{sign: 1, coef: l, exp: 0})
   end,
@@ -19,6 +20,22 @@ bench = %{
   end,
   "Apa.to_string()     Dec" => fn {l, r} ->
     Apa.to_string({l, -3})
+  end,
+
+  # To String Convert with special value "9" for precision/scale
+  "Decimal.to_string() Int/precison 9:" => fn {l, r} ->
+    Decimal.Context.set(%Decimal.Context{Decimal.Context.get() | precision: 9})
+    Decimal.to_string(%Decimal{sign: 1, coef: l, exp: 0})
+  end,
+  "Apa.to_string()     Int/precison 9:" => fn {l, r} ->
+    Apa.to_string({l, 0})
+  end,
+  "Decimal.to_string() Dec/precison 9:" => fn {l, r} ->
+    Decimal.Context.set(%Decimal.Context{Decimal.Context.get() | precision: 9})
+    Decimal.to_string(%Decimal{sign: 1, coef: l, exp: -3})
+  end,
+  "Apa.to_string()     Dec/precison 9:" => fn {l, r} ->
+    Apa.to_string({l, -3}, -1, 9)
   end
 }
 
