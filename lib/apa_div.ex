@@ -60,7 +60,7 @@ defmodule ApaDiv do
     {Kernel.div(left_int, right_int), left_exp - right_exp}
   end
 
-  defp bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, _rem, acc, scale_limit)
+  defp bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, _rem, _acc, scale_limit)
        when left_exp == -scale_limit do
     {Kernel.div(left_int, right_int), left_exp - right_exp}
   end

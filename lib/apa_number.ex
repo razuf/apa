@@ -275,11 +275,11 @@ defmodule ApaNumber do
   end
 
   defp to_string_integer({int_value, exp}, precision, scale) when precision > 0 do
-    # Todo: check optimization
     len =
-      Kernel.abs(int_value)
-      |> Integer.to_charlist()
-      |> Kernel.length()
+      int_value
+      |> Kernel.abs()
+      |> Integer.to_string()
+      |> Kernel.byte_size()
 
     diff = len - precision
 
@@ -313,11 +313,11 @@ defmodule ApaNumber do
   end
 
   defp to_string_decimals({int_value, exp}, precision, scale) when precision > 0 do
-    # Todo: check for optimization
     len =
-      Kernel.abs(int_value)
-      |> Integer.to_charlist()
-      |> Kernel.length()
+      int_value
+      |> Kernel.abs()
+      |> Integer.to_string()
+      |> Kernel.byte_size()
 
     diff = len - precision
 
