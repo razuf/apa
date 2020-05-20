@@ -3,7 +3,7 @@ name: Elixir CI
 env:
   ELIXIR_VERSION: 1.10.3
   OTP_VERSION: 22.x
-  APP_VERSION: 0.6.7
+  APP_VERSION: 0.6.8
 
 on:
   push:

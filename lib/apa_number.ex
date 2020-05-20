@@ -253,7 +253,8 @@ defmodule ApaNumber do
     iex> ApaNumber.to_string({3, 0}, -1, -1)
     "3"
   """
-  def to_string({int_value, _exp}, precision, scale) when int_value == 0 do
+  @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
+  def to_string({0, _exp}, precision, scale) do
     to_string_integer({0, 0}, precision, scale)
   end
 

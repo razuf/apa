@@ -33,13 +33,11 @@ defmodule ApaDiv do
   # bc_div_apa_number/3
   @spec bc_div_apa_number({integer(), integer()}, {integer(), integer()}, integer()) ::
           {integer(), integer()}
-  def bc_div_apa_number({left_int, _left_exp}, {right_int, _right_exp}, _scale)
-      when left_int == 0 and right_int == 0 do
+  def bc_div_apa_number({0, _left_exp}, {0, _right_exp}, _scale) do
     raise(ArgumentError, "Impossible operation - division by zero - 0 / 0 - see doc.")
   end
 
-  def bc_div_apa_number({_left_int, _left_exp}, {right_int, _right_exp}, _scale)
-      when right_int == 0 do
+  def bc_div_apa_number({_left_int, _left_exp}, {0, _right_exp}, _scale) do
     raise(ArgumentError, "Impossible operation - division by zero - divisor == 0 - see doc.")
   end
 
