@@ -11,14 +11,13 @@ defmodule ApaDiv do
   Division - internal function - please call Apa.div(left, right)
   In reference to bcmath I call this function bc_div
   """
-  @spec bc_div(term(), term(), integer(), integer()) :: String.t()
-  def bc_div(left, right, precision, scale) do
+  @spec bc_div(term(), term(), integer()) :: String.t()
+  def bc_div(left, right, scale) do
     {left_int, left_exp} = Apa.new(left)
     {right_int, right_exp} = Apa.new(right)
 
     Apa.to_string(
       bc_div_apa_number({left_int, left_exp}, {right_int, right_exp}, scale),
-      precision,
       scale
     )
   end

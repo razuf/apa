@@ -4,17 +4,17 @@ defmodule ApaAdd do
   """
 
   @doc """
-  Addition - internal function - please call Apa.add(left, right, precision, scale)
+  Addition - internal function - please call Apa.add(left, right, scale)
   In reference to bcmath I call this function bc_add
   """
 
-  @spec bc_add(term(), term(), integer(), integer()) :: String.t()
-  def bc_add(left, right, precision, scale) do
+  @spec bc_add(term(), term(), integer()) :: String.t()
+  def bc_add(left, right, scale) do
     {left_int, left_exp} = Apa.new(left)
     {right_int, right_exp} = Apa.new(right)
 
     bc_add_apa_number({left_int, left_exp}, {right_int, right_exp})
-    |> Apa.to_string(precision, scale)
+    |> Apa.to_string(scale)
   end
 
   @spec bc_add_apa_number({integer(), integer()}, {integer(), integer()}) ::

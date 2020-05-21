@@ -441,95 +441,40 @@ defmodule ApaTest do
     assert total_string == "42.12"
   end
 
-  test "precision tests" do
-    assert "12300" == Apa.to_string({123, 2}, 0, 0)
-    assert "10000" == Apa.to_string({123, 2}, 1, 0)
-    # assert "12000" == Apa.to_string({123, 2}, 2, 0)
-    assert "12300" == Apa.to_string({123, 2}, 3, 0)
-    assert "12300" == Apa.to_string({123, 2}, 333, 0)
-
-    assert "-12300" == Apa.to_string({-123, 2}, 3, 0)
-    # assert "-1230000" == Apa.to_string({-12_345, 2}, 3, 0)
-
-    # assert "123" == Apa.to_string({12_345, -2}, 0, 0)
-    # assert "123" == Apa.to_string({12_345, -2}, 3, 0)
-    # assert "120" == Apa.to_string({12_345, -2}, 2, 0)
-
-    # assert "123" == Apa.to_string({12_345, -2}, 0, 0)
-    # assert "123" == Apa.to_string({12_345, -2}, 3, 0)
-    # assert "120" == Apa.to_string({12_345, -2}, 2, 0)
-
-    # assert "123.00" == Apa.to_string({12_345, -2}, 3, 2)
-    # assert "123.40" == Apa.to_string({12_345, -2}, 4, 2)
-    # assert "0.012340" == Apa.to_string({12_345, -6}, 4, 6)
-    # assert "0.012345000" == Apa.to_string({12_345_000, -9}, 5, 9)
-    # assert "-0.012345000" == Apa.to_string({-12_345_000, -9}, 5, 9)
-    # assert "-0.012345000" == Apa.to_string({-12_345_678, -9}, 5)
-    # assert "-0.012345678" == Apa.to_string({-12_345_678, -9}, 8)
-
-    # assert "100000.000" == Apa.to_string({123, 3}, 1, 3)
-
-    # assert "100" == Apa.to_string({123, 0}, 1, 0)
-    # assert "1.23" == Apa.to_string({123, -2}, -1, 2)
-
-    # assert "55" == Apa.add("12.34", "43.21", 2, 0)
-    # assert "50.00" == Apa.add("12.34", "43.21", 1, 2)
-    # assert "55.55" == Apa.add("12.34", "43.21", 4, 2)
-    # assert "55.55" == Apa.add("12.34", "43.21", 30, 2)
-    # assert "-55.55" == Apa.add("-12.34", "-43.21", -1, 2)
-
-    assert "0" == Apa.to_string({0, -3})
-  end
-
   test "scale tests" do
-    assert "1.2300" == Apa.to_string({123, -2}, -1, 4)
+    assert "1.2300" == Apa.to_string({123, -2}, 4)
 
-    assert "12300" == Apa.to_string({123, 2}, 0, -1)
-    assert "10000" == Apa.to_string({123, 2}, 1, -1)
-    assert "12000" == Apa.to_string({123, 2}, 2, -1)
-    assert "12300" == Apa.to_string({123, 2}, 3, -1)
-    assert "12300" == Apa.to_string({123, 2}, 333, -1)
-    assert "-12300" == Apa.to_string({-123, 2}, 3, -1)
+    assert "12300" == Apa.to_string({123, 2}, -1)
+    assert "-12300" == Apa.to_string({-123, 2}, -1)
 
-    assert "-1230000" == Apa.to_string({-12_345, 2}, 3, -1)
-    assert "123.45" == Apa.to_string({12_345, -2}, -1, -1)
+    assert "-1234500" == Apa.to_string({-12_345, 2}, -1)
+    assert "123.45" == Apa.to_string({12_345, -2}, -1)
 
-    assert "123.45" == Apa.to_string({12_345, -2}, 6, -1)
-    assert "123.45" == Apa.to_string({12_345, -2}, 5, -1)
-    assert "123.40" == Apa.to_string({12_345, -2}, 4, -1)
-    assert "123.00" == Apa.to_string({12_345, -2}, 3, -1)
-    assert "120.00" == Apa.to_string({12_345, -2}, 2, -1)
-    assert "100.00" == Apa.to_string({12_345, -2}, 1, -1)
+    assert "123.45" == Apa.to_string({12_345, -2}, -1)
+    assert "123.45" == Apa.to_string({12_345, -2}, -1)
 
-    assert "123.45" == Apa.to_string({12_345, -2}, -1, -1)
-    assert "123.0" == Apa.to_string({12_345, -2}, 3, 1)
-    assert "120.00" == Apa.to_string({12_345, -2}, 2, -1)
+    assert "123.45" == Apa.to_string({12_345, -2}, -1)
+    assert "123.4" == Apa.to_string({12_345, -2}, 1)
 
-    assert "123.00" == Apa.to_string({12_345, -2}, 3, 2)
-    assert "123.40" == Apa.to_string({12_345, -2}, 4, 2)
-    assert "0.012340" == Apa.to_string({12_345, -6}, 4, 6)
-    assert "0.012345000" == Apa.to_string({12_345_000, -9}, 5, 9)
-    assert "-0.012345000" == Apa.to_string({-12_345_000, -9}, 5, 9)
-    assert "-0.012345000" == Apa.to_string({-12_345_678, -9}, 5)
-    assert "-0.012345678" == Apa.to_string({-12_345_678, -9}, 8)
+    assert "123.45" == Apa.to_string({12_345, -2}, 2)
+    assert "0.012345" == Apa.to_string({12_345, -6}, 6)
+    assert "0.012345000" == Apa.to_string({12_345_000, -9}, 9)
+    assert "-0.012345000" == Apa.to_string({-12_345_000, -9}, 9)
+    assert "-0.01234" == Apa.to_string({-12_345_678, -9}, 5)
+    assert "-0.01234567" == Apa.to_string({-12_345_678, -9}, 8)
 
-    assert "100000.000" == Apa.to_string({123, 3}, 1, 3)
-    assert "100" == Apa.to_string({123, 0}, 1, 0)
+    assert "1.23" == Apa.to_string({123, -2}, 2)
+    assert "123.00" == Apa.to_string({123, 0}, 2)
 
-    assert "1.23" == Apa.to_string({123, -2}, -1, 2)
-    assert "123.00" == Apa.to_string({123, 0}, -1, 2)
+    assert "55" == Apa.add("12.34", "43.21", 0)
+    assert "55.55" == Apa.add("12.34", "43.21", 2)
+    assert "-55.55" == Apa.add("-12.34", "-43.21", 2)
 
-    assert "55" == Apa.add("12.34", "43.21", 2, 0)
-    assert "50.00" == Apa.add("12.34", "43.21", 1, 2)
-    assert "55.55" == Apa.add("12.34", "43.21", 4, 2)
-    assert "55.55" == Apa.add("12.34", "43.21", 30, 2)
-    assert "-55.55" == Apa.add("-12.34", "-43.21", -1, 2)
-
-    assert "-3.33" == Apa.div("-10", "3", -1, 2)
+    assert "-3.33" == Apa.div("-10", "3", 2)
   end
 
   test "special div tests" do
-    assert "-333333333333333333333.33" == Apa.div("-1000000000000000000000", "3", -1, 2)
+    assert "-333333333333333333333.33" == Apa.div("-1000000000000000000000", "3", 2)
   end
 
   # private helper

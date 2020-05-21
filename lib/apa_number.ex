@@ -250,48 +250,27 @@ defmodule ApaNumber do
 
   ## Examples
 
-    iex> ApaNumber.to_string({3, 0}, -1, -1)
+    iex> ApaNumber.to_string({3, 0}, -1)
     "3"
   """
-  @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
-  def to_string({0, _exp}, precision, scale) do
-    to_string_integer({0, 0}, precision, scale)
+  @spec to_string({integer(), integer()}, integer()) :: binary | :error
+  def to_string({0, _exp}, scale) do
+    to_string_integer({0, 0}, scale)
   end
 
-  def to_string({int_value, exp}, precision, scale) when exp >= 0 do
-    to_string_integer({int_value, exp}, precision, scale)
-  end
-
-  def to_string({int_value, exp}, precision, scale) when exp < 0 and int_value < 0 do
-    "-" <> to_string_decimals({int_value * -1, exp}, precision, scale)
-  end
-
-  def to_string({int_value, exp}, precision, scale) when exp < 0 do
-    to_string_decimals({int_value, exp}, precision, scale)
-  end
-
-  ########## to_string_integer  exp >= 0
-  defp to_string_integer({int_value, exp}, precision, scale) when precision <= 0 do
+  def to_string({int_value, exp}, scale) when exp >= 0 do
     to_string_integer({int_value, exp}, scale)
   end
 
-  defp to_string_integer({int_value, exp}, precision, scale) when precision > 0 do
-    len =
-      int_value
-      |> Kernel.abs()
-      |> Integer.to_string()
-      |> Kernel.byte_size()
-
-    diff = len - precision
-
-    if diff > 0 do
-      int_value = div(int_value, ApaNumber.pow10(diff))
-      to_string_integer({int_value, exp + diff}, scale)
-    else
-      to_string_integer({int_value, exp}, scale)
-    end
+  def to_string({int_value, exp}, scale) when exp < 0 and int_value < 0 do
+    "-" <> to_string_decimals({int_value * -1, exp}, scale)
   end
 
+  def to_string({int_value, exp}, scale) when exp < 0 do
+    to_string_decimals({int_value, exp}, scale)
+  end
+
+  ########## to_string_integer  exp >= 0
   defp to_string_integer({int_value, exp}, scale) do
     {shifted_int, 0} = shift_to({int_value, exp}, 0)
 
@@ -309,29 +288,6 @@ defmodule ApaNumber do
   end
 
   ########## to_string_decimals  exp < 0
-  defp to_string_decimals({int_value, exp}, precision, scale) when precision <= 0 do
-    to_string_decimals({int_value, exp}, scale)
-  end
-
-  defp to_string_decimals({int_value, exp}, precision, scale) when precision > 0 do
-    len =
-      int_value
-      |> Kernel.abs()
-      |> Integer.to_string()
-      |> Kernel.byte_size()
-
-    diff = len - precision
-
-    if diff > 0 do
-      int_value = div(int_value, ApaNumber.pow10(diff))
-      {shifted_int, 0} = shift_to({int_value, diff}, 0)
-
-      to_string_decimals({shifted_int, exp}, scale)
-    else
-      to_string_decimals({int_value, exp}, scale)
-    end
-  end
-
   defp to_string_decimals({int_value, exp}, scale) when scale == 0 do
     int_value
     |> div(ApaNumber.pow10(Kernel.abs(exp)))

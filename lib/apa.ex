@@ -11,14 +11,12 @@ defmodule Apa do
   You could use it if you like - there are some test coverage -
   but for production I would recomend the Decimal (https://github.com/ericmj/decimal) package!
 
-  The 'precision' of a ApaNumber is the total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
   The 'scale' of a ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point
 
   You are welcome to read the code and if you find something that could be done better, please let me know.
   """
   import Kernel, except: [abs: 1, max: 2, min: 2, rem: 2, round: 1]
 
-  @precision_default Application.get_env(:apa, :precision_default, -1)
   @scale_default Application.get_env(:apa, :scale_default, -1)
 
   @doc """
@@ -219,7 +217,7 @@ defmodule Apa do
 
   @doc """
   Output an ApaNumber tuple as a binary (number string).
-  Precision and scale can be used to format or limit the output string.
+  Scale can be used to format or limit the output string.
 
   ## Examples
 
@@ -241,11 +239,11 @@ defmodule Apa do
     iex> Apa.to_string({-3997, -6})
     "-0.003997"
   """
-  @spec to_string({integer(), integer()}, integer(), integer()) :: binary | :error
-  def to_string(number_tuple, precision \\ @precision_default, scale \\ @scale_default)
+  @spec to_string({integer(), integer()}, integer()) :: binary | :error
+  def to_string(number_tuple, scale \\ @scale_default)
 
-  def to_string({int, exp}, precision, scale) do
-    ApaNumber.to_string({int, exp}, precision, scale)
+  def to_string({int, exp}, scale) do
+    ApaNumber.to_string({int, exp}, scale)
   end
 
   @doc """
@@ -315,11 +313,11 @@ defmodule Apa do
     iex> Apa.add("1.0e2", "1.1")
     "101.1"
   """
-  @spec add(String.t(), String.t(), integer(), integer()) :: String.t()
-  def add(left, right, precision \\ @precision_default, scale \\ @scale_default)
+  @spec add(String.t(), String.t(), integer()) :: String.t()
+  def add(left, right, scale \\ @scale_default)
 
-  def add(left, right, precision, scale) do
-    ApaAdd.bc_add(left, right, precision, scale)
+  def add(left, right, scale) do
+    ApaAdd.bc_add(left, right, scale)
   end
 
   @spec String.t() + String.t() :: String.t()
@@ -372,11 +370,11 @@ defmodule Apa do
     iex> Apa.sub("3.30000000000000004", "3.30000000000000003")
     "0.00000000000000001"
   """
-  @spec sub(String.t(), String.t(), integer(), integer()) :: String.t()
-  def sub(left, right, precision \\ @precision_default, scale \\ @scale_default)
+  @spec sub(String.t(), String.t(), integer()) :: String.t()
+  def sub(left, right, scale \\ @scale_default)
 
-  def sub(left, right, precision, scale) do
-    ApaSub.bc_sub(left, right, precision, scale)
+  def sub(left, right, scale) do
+    ApaSub.bc_sub(left, right, scale)
   end
 
   @spec String.t() - String.t() :: String.t()
@@ -423,11 +421,11 @@ defmodule Apa do
     iex> "1" |> Apa.mul("2") |> Apa.mul("3")
     "6"
   """
-  @spec mul(String.t(), String.t(), integer(), integer()) :: String.t()
-  def mul(left, right, precision \\ @precision_default, scale \\ @scale_default)
+  @spec mul(String.t(), String.t(), integer()) :: String.t()
+  def mul(left, right, scale \\ @scale_default)
 
-  def mul(left, right, precision, scale) do
-    ApaMul.bc_mul(left, right, precision, scale)
+  def mul(left, right, scale) do
+    ApaMul.bc_mul(left, right, scale)
   end
 
   @spec String.t() * String.t() :: String.t()
@@ -481,11 +479,11 @@ defmodule Apa do
     iex> Apa.div("222.2001", "2222.001")
     "0.1"
   """
-  @spec div(String.t(), String.t(), integer(), integer()) :: String.t()
-  def div(left, right, precision \\ @precision_default, scale \\ @scale_default)
+  @spec div(String.t(), String.t(), integer()) :: String.t()
+  def div(left, right, scale \\ @scale_default)
 
-  def div(left, right, precision, scale) do
-    ApaDiv.bc_div(left, right, precision, scale)
+  def div(left, right, scale) do
+    ApaDiv.bc_div(left, right, scale)
   end
 
   @spec String.t() / String.t() :: String.t()
@@ -519,7 +517,6 @@ defmodule Apa do
   left - the left operand, as a string.
   right - the right operand, as a string.
 
-  The 'precision' of a ApaNumber is the total count of significant digits in the whole number, that is, the number of digits to both sides of the decimal point.
   The 'scale' of a ApaNumber is the count of decimal digits in the fractional part, to the right of the decimal point
 
   Returns:
@@ -570,17 +567,17 @@ defmodule Apa do
     iex> Apa.comp("1.0", "1.1")
     -1
 
-    iex> Apa.comp("1.0", "1.1", 0, 1)
+    iex> Apa.comp("1.0", "1.1", 1)
     -1
 
-    iex> Apa.comp("1.0", "1.1", 0, 0)
+    iex> Apa.comp("1.0", "1.1", 0)
     0
   """
-  @spec comp(String.t(), String.t(), integer(), integer()) :: integer() | Exception
-  def comp(left, right, precision \\ @precision_default, scale \\ @scale_default)
+  @spec comp(String.t(), String.t(), integer()) :: integer() | Exception
+  def comp(left, right, scale \\ @scale_default)
 
-  def comp(left, right, precision, scale) do
-    ApaComp.bc_comp(left, right, precision, scale)
+  def comp(left, right, scale) do
+    ApaComp.bc_comp(left, right, scale)
   end
 
   @doc """

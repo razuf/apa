@@ -60,7 +60,7 @@ bench = %{
     Decimal.div(l, r) |> Decimal.to_string()
   end,
   "Apa.div()    precision: 9             Int->float" => fn {l, r} ->
-    Apa.div(l, r, -1, 9)
+    Apa.div(l, r, 9)
   end
 
   # # Addition -  Integer values
