@@ -176,10 +176,6 @@ defmodule ApaTest do
     assert ApaNumber.base10?(-1) == :error
   end
 
-  test "ApaNumber.shift_to test" do
-    assert ApaNumber.shift_to({3, -1}, -2) == {30, -2}
-  end
-
   test "Apa.add - some random numbers - also with leading and trailing zeros" do
     for _n <- 1..1 do
       left =

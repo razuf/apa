@@ -293,7 +293,7 @@ defmodule ApaNumber do
   end
 
   defp to_string_integer({int_value, exp}, scale) do
-    {shifted_int, 0} = shift_to({int_value, exp}, 0)
+    shifted_int = int_value * ApaNumber.pow10(exp)
 
     Integer.to_string(shifted_int)
     |> scale_up_integer(scale)
@@ -323,8 +323,8 @@ defmodule ApaNumber do
     diff = len - precision
 
     if diff > 0 do
-      int_value = div(int_value, ApaNumber.pow10(diff))
-      {shifted_int, 0} = shift_to({int_value, diff}, 0)
+      fac = ApaNumber.pow10(diff)
+      shifted_int = div(int_value, fac) * fac
 
       to_string_decimals({shifted_int, exp}, scale)
     else
@@ -335,8 +335,11 @@ defmodule ApaNumber do
   defp to_string_decimals({int_value, exp}, scale) when scale == 0 do
     int_value
     |> div(ApaNumber.pow10(Kernel.abs(exp)))
-    |> Integer.to_charlist()
-    |> IO.iodata_to_binary()
+    |> Integer.to_string()
+
+    ## faster and less mem then:
+    # |> Integer.to_charlist()
+    # |> IO.iodata_to_binary()
   end
 
   defp to_string_decimals({int_value, exp}, scale) when scale < 0 do
@@ -380,82 +383,6 @@ defmodule ApaNumber do
 
   defp list_and_length(list) do
     {list, Kernel.length(list)}
-  end
-
-  @doc """
-  Shifts an ApaNumber to another decimal point
-  to work with the intended integer calculation of two numbers with the same decimal point
-  this operation do not change the mathematical value:
-  Apa.to_string({2, -1}) == "0.2" ~math-equal~ Apa.to_string({20, -2}) == "0.20"
-  and always shift_decimal_point > exp because fillup with zeros
-  reduce non existing zeros is not possible and not necessary to implement
-  returns the shifted ApaNumber tupel or if not possible to shift the input tupel
-  ## Examples
-
-    iex> ApaNumber.shift_to({2, -1}, -2)
-    {20, -2}
-
-    iex> ApaNumber.shift_to({2, -1}, -4)
-    {2000, -4}
-
-    iex> ApaNumber.shift_to({2000, -1}, 0)
-    {200, 0}
-
-    iex> ApaNumber.shift_to({2000, -4}, -1)
-    {2, -1}
-
-    iex> ApaNumber.shift_to({20, -1}, 0)
-    {2, 0}
-  """
-  @spec shift_to({integer(), integer()}, integer()) :: {integer(), integer()}
-  def shift_to({int_value, exp}, shift_decimal_point)
-      when exp == shift_decimal_point do
-    {int_value, exp}
-  end
-
-  def shift_to({int_value, exp}, shift_decimal_point)
-      when abs(exp) < abs(shift_decimal_point) do
-    diff = shift_decimal_point - exp
-    int_value = int_value * pow10(abs(diff))
-    {int_value, shift_decimal_point}
-  end
-
-  def shift_to({int_value, exp}, shift_decimal_point) do
-    counted_zeros = count_trailing_zeros(int_value)
-    diff = shift_decimal_point - exp
-
-    shift_to(int_value, shift_decimal_point, counted_zeros, diff)
-  end
-
-  defp shift_to(int_value, shift_decimal_point, counted_zeros, diff)
-       when counted_zeros > 0 and counted_zeros >= diff do
-    {remove_number_of_zeros(int_value, diff), shift_decimal_point}
-  end
-
-  defp shift_to(int_value, shift_decimal_point, _counted_zeros, diff) do
-    int_value = int_value * pow10(abs(diff))
-    {int_value, shift_decimal_point}
-  end
-
-  defp count_trailing_zeros(int_value, acc \\ 0)
-
-  defp count_trailing_zeros(0, acc), do: acc
-
-  defp count_trailing_zeros(rest, acc) do
-    # Todo: check for optimization
-    case Kernel.rem(rest, 10) do
-      0 -> count_trailing_zeros(div(rest, 10), acc + 1)
-      _ -> count_trailing_zeros(0, acc)
-    end
-  end
-
-  defp remove_number_of_zeros(int_value, 0), do: int_value
-
-  defp remove_number_of_zeros(rest_int, acc) do
-    # Todo: check for optimization
-    case Kernel.rem(rest_int, 10) do
-      0 -> remove_number_of_zeros(div(rest_int, 10), acc - 1)
-    end
   end
 
   @doc """

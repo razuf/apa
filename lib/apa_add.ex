@@ -21,14 +21,14 @@ defmodule ApaAdd do
           {integer(), integer()}
   def bc_add_apa_number({left_int, left_exp}, {right_int, right_exp})
       when left_exp < right_exp do
-    {shifted_right_int, shifted_exp} = ApaNumber.shift_to({right_int, right_exp}, left_exp)
-    {left_int + shifted_right_int, shifted_exp}
+    int_value = left_int + right_int * ApaNumber.pow10(right_exp - left_exp)
+    {int_value, left_exp}
   end
 
   def bc_add_apa_number({left_int, left_exp}, {right_int, right_exp})
       when left_exp > right_exp do
-    {shifted_left_int, shifted_exp} = ApaNumber.shift_to({left_int, left_exp}, right_exp)
-    {shifted_left_int + right_int, shifted_exp}
+    int_value = left_int * ApaNumber.pow10(left_exp - right_exp) + right_int
+    {int_value, right_exp}
   end
 
   def bc_add_apa_number({left_int, left_exp}, {right_int, _right_exp}) do
