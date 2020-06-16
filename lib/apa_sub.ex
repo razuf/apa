@@ -5,7 +5,6 @@ defmodule ApaSub do
 
   @doc """
   Subtraction - internal function - please call Apa.sub(left, right)
-  In reference to bcmath I call this function bc_sub
   """
   @spec bc_sub(term(), term(), integer(), integer()) :: String.t()
   def bc_sub(left, right, precision, scale) do

@@ -5,7 +5,6 @@ defmodule ApaAdd do
 
   @doc """
   Addition - internal function - please call Apa.add(left, right, precision, scale)
-  In reference to bcmath I call this function bc_add
   """
 
   @spec bc_add(term(), term(), integer(), integer()) :: String.t()

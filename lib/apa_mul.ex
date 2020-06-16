@@ -5,7 +5,6 @@ defmodule ApaMul do
 
   @doc """
   Multiplication - internal function - please call Apa.mul(left, right)
-  In reference to bcmath I call this function bc_mul
   """
   @spec bc_mul(term(), term(), integer(), integer()) :: String.t()
   def bc_mul(left, right, precision, scale) do
