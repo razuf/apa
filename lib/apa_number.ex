@@ -377,7 +377,7 @@ defmodule ApaNumber do
   end
 
   defp to_string_decimals_list({list, list_len}, exp) do
-    # Todo: check for optimizing here because String.duplicate is 5.49x faster!!!
+    # To check: check for optimizing here because String.duplicate is 5.49x faster!!!
     '0.' ++ :lists.duplicate(-(list_len + exp), ?0) ++ list
   end
 
